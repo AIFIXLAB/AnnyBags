@@ -21,10 +21,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
 .bottom-strip{padding:12px 15px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.status{font-size:12px;color:var(--muted)}.props{padding:0 14px 15px}.props h3{font-size:13px;margin:12px 0}.empty{padding:12px;background:#f8f3ea;border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6}
 .color-row{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.swatch{width:27px;height:27px;border-radius:8px;border:2px solid white;box-shadow:0 0 0 1px #d8d0c4;cursor:pointer}.swatch.chosen{box-shadow:0 0 0 2px var(--ink)}
 .library-item{display:flex;align-items:center;gap:9px;padding:10px 9px;border:1px solid var(--line);border-radius:11px;margin:7px 0;background:#fff}.library-item .mini{width:42px;height:34px;border:1px solid #d8cdbc;border-radius:6px;display:grid;place-items:center;background:#f4eee4;font-size:19px}.library-item div:nth-child(2){flex:1;min-width:0}.library-item b{font-size:12px;display:block}.library-item small{font-size:10px;color:var(--muted)}.library-item button{padding:7px 9px;font-size:11px}
-.camera-modal{position:fixed;inset:0;z-index:100;background:#171613dd;display:none;align-items:center;justify-content:center;padding:14px}.camera-modal.open{display:flex}.camera-card{background:#fffdf8;border-radius:16px;padding:14px;width:min(100%,620px);max-height:95dvh;overflow:auto}.camera-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.camera-head strong{font-size:15px}.camera-card video{display:block;width:100%;max-height:65dvh;min-height:220px;object-fit:contain;background:#1e1e1e;border-radius:12px}.camera-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.camera-actions button{min-height:48px}
+
 #photoCanvas{width:100%;max-height:150px;object-fit:contain;background:#f6f0e6;border-radius:10px;margin-top:8px;display:none;touch-action:manipulation}
 .file-input{position:fixed;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0;pointer-events:none}
-#chooseFabricBtn,#takeFabricBtn{min-height:46px;font-size:12px;touch-action:manipulation;-webkit-appearance:none}
+#chooseFabricBtn{min-height:46px;font-size:12px;touch-action:manipulation;-webkit-appearance:none}
 #photoCanvas{cursor:crosshair;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .upload-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:17px 12px;border:1.5px dashed #cdbda8;border-radius:12px;background:#fbf7ef;cursor:pointer;text-align:center;min-height:100px}
 .upload-zone:hover,.upload-zone:focus-within{border-color:var(--accent);background:#f5ecdf}
@@ -112,21 +112,17 @@ body.draw-mode #designSvg{touch-action:pan-y;-webkit-tap-highlight-color:transpa
    </div>
    <label class="field">เลือกสีเอง <input type="color" id="bodyColor" value="#d8c5a7"></label>
    <div class="divider"></div>
-   <div class="section-label">ถ่ายรูป / เลือกรูปผ้า</div>
+   <div class="section-label">นำเข้ารูปผ้า</div>
    <div class="upload-zone" id="uploadZone" role="group" aria-label="นำเข้ารูปผ้า">
     <span class="upload-icon">＋</span>
     <strong id="uploadTitle">นำเข้ารูปผ้า</strong>
-    <small id="uploadHint">เลือกจากคลังรูปภาพ หรือเปิดกล้อง iPad</small>
+    <small id="uploadHint">เลือกภาพผ้าจาก Photos หรือ Files บน iPad</small>
    </div>
-   <div class="grid2" style="margin-top:7px">
-    <button type="button" id="chooseFabricBtn">▧ เลือกจากรูปภาพ</button>
-    <button type="button" id="takeFabricBtn">◎ เปิดกล้อง iPad</button>
-   </div>
-   <input type="file" id="fabricFile" accept="image/*" class="file-input" aria-label="เลือกภาพผ้าจากคลังรูปภาพ">
-   <input type="file" id="cameraFabricFile" accept="image/*" capture="environment" class="file-input" aria-label="เปิดกล้อง iPad เพื่อถ่ายภาพผ้า">
+   <button type="button" id="chooseFabricBtn" style="width:100%;margin-top:7px">▧ เลือกรูปผ้าจาก iPad</button>
+   <input type="file" id="fabricFile" accept="image/*" class="file-input" aria-label="เลือกรูปผ้าจาก Photos หรือ Files">
    <canvas id="photoCanvas" title="แตะบริเวณสีผ้าที่ต้องการเลือก"></canvas>
    <p id="photoStatus" class="hint">เมื่อรูปแสดงแล้ว ให้แตะบริเวณสีผ้าบนรูปเพื่อเก็บสีตัวอย่าง แล้วกด “ใช้สีผ้าที่เลือก”</p>
-   <p class="hint">รองรับ JPG, PNG, WEBP และรูปภาพจากกล้อง</p>
+   <p class="hint">รองรับไฟล์ภาพ JPG, PNG และ WEBP</p>
    <button id="applyFabric" style="width:100%;margin-top:7px">ใช้สีผ้าที่เลือก</button>
    <button id="applyFabricPattern" style="width:100%;margin-top:7px">▧ ใช้ลายผ้าจากภาพกับชิ้นส่วน</button>
    <label class="field" style="margin-top:7px">ขนาดลายผ้า <span id="patternScaleLabel">100%</span>
@@ -251,10 +247,10 @@ function setupPhoto(fileOverride){
  $('uploadHint').textContent=file.name||'รูปจากอุปกรณ์';
  $('photoStatus').textContent='กำลังประมวลผลรูปภาพ';
  const reader=new FileReader();
- reader.onerror=()=>{ $('uploadTitle').textContent='เลือกรูปผ้า หรือถ่ายรูป';$('photoStatus').textContent='เปิดรูปไม่สำเร็จ ลองเลือกรูปอื่นอีกครั้ง';toast('อ่านไฟล์รูปไม่สำเร็จ กรุณาลองใหม่') };
+ reader.onerror=()=>{ $('uploadTitle').textContent='เลือกรูปผ้า';$('photoStatus').textContent='เปิดรูปไม่สำเร็จ ลองเลือกรูปอื่นอีกครั้ง';toast('อ่านไฟล์รูปไม่สำเร็จ กรุณาลองใหม่') };
  reader.onload=()=>{
   const img=new Image();
-  img.onerror=()=>{ $('uploadTitle').textContent='เลือกรูปผ้า หรือถ่ายรูป';$('photoStatus').textContent='ไฟล์รูปนี้เปิดไม่ได้ กรุณาเลือกรูป JPG หรือ PNG';toast('เปิดรูปภาพไม่ได้ กรุณาลองรูปอื่น') };
+  img.onerror=()=>{ $('uploadTitle').textContent='เลือกรูปผ้า';$('photoStatus').textContent='ไฟล์รูปนี้เปิดไม่ได้ กรุณาเลือกรูป JPG หรือ PNG';toast('เปิดรูปภาพไม่ได้ กรุณาลองรูปอื่น') };
   img.onload=()=>{
    try{
     const c=$('photoCanvas'),maxW=900,scale=Math.min(1,maxW/img.width);
@@ -284,20 +280,7 @@ $('photoCanvas').addEventListener('click',e=>{if(Date.now()-lastCanvasTouch<700)
 function renderSavedColors(){$('savedColors').innerHTML='';state.savedColors.forEach(c=>{let b=document.createElement('button');b.className='swatch';b.style.background=c;b.title=c;b.onclick=()=>{state.photoColor=c;applyColor(c)};$('savedColors').appendChild(b)})}
 // iPad/iOS Safari: trigger the native picker directly from a user tap.
 $('chooseFabricBtn').addEventListener('click',()=>{const input=$('fabricFile');input.value='';input.click()});
-// iPad/Safari: open the native camera picker directly from the user's tap.
-// Delayed input.click() after an async permission request is often blocked by iOS.
-$('takeFabricBtn').addEventListener('click',()=>{
- const input=$('cameraFabricFile');
- input.value='';
- input.click();
-});
-$('cameraFabricFile').addEventListener('change',e=>{
- const file=e.target.files&&e.target.files[0];
- if(file) setupPhoto(file);
- e.target.value='';
-});
 $('fabricFile').addEventListener('change',e=>{setupPhoto(e.target.files&&e.target.files[0]);e.target.value=''});
-$('cameraFabricFile').addEventListener('change',e=>{setupPhoto(e.target.files&&e.target.files[0]);e.target.value=''});
 $('uploadZone').addEventListener('click',()=>{const input=$('fabricFile');input.value='';input.click()});
 $('uploadZone').style.cursor='pointer';
 $('uploadZone').addEventListener('dragover',e=>{e.preventDefault();$('uploadZone').classList.add('dragover')});
@@ -306,7 +289,7 @@ $('uploadZone').addEventListener('drop',e=>{e.preventDefault();$('uploadZone').c
 $('applyFabric').onclick=()=>{if(!state.photoColor){toast('กรุณาเลือกรูปผ้าแล้วแตะเลือกสีบนภาพก่อน');return}applyColor(state.photoColor);toast('นำสีไปใช้แล้ว')};
 $('patternScale').addEventListener('input',e=>{state.textureScale=Number(e.target.value)||100;$('patternScaleLabel').textContent=state.textureScale+'%';render()});
 $('applyFabricPattern').onclick=()=>{
- if(!state.photoData){toast('กรุณาถ่ายรูปหรือเลือกไฟล์ภาพลายผ้าก่อน');return}
+ if(!state.photoData){toast('กรุณาเลือกไฟล์ภาพลายผ้าก่อน');return}
  if(state.selected){const it=selected();if(!it){toast('เลือกชิ้นส่วนบนกระเป๋าก่อน');return}it.texture=state.photoData;}
  else{state.bodyTexture=state.photoData;}
  render();toast(state.selected?'นำลายผ้าไปใช้กับชิ้นส่วนที่เลือกแล้ว':'นำลายผ้าไปใช้กับตัวกระเป๋าแล้ว');
