@@ -236,8 +236,45 @@ let patternPieces=[];
 function showPattern(){patternPieces=generatePieces();$('patternInfo').textContent=`ขนาดหลัก ${state.w} × ${state.h} ซม. • เผื่อตะเข็บ ${state.seam} ซม. • ${patternPieces.length} รายการชิ้นส่วน ตัวอย่างนี้เป็นแพทเทิร์นเรขาคณิตเบื้องต้น ไม่ใช่แบบผลิตที่ผ่านการทดสอบ`;
 $('patternList').innerHTML='';patternPieces.forEach(p=>{let div=document.createElement('div');div.className='pattern-piece';div.innerHTML=`<h4>${escapeHtml(p.name)}</h4>${makePieceSvg(p)}<p>ขนาดสำเร็จ ${p.w} × ${p.h} ซม. · เผื่อตะเข็บรอบ ${state.seam} ซม.</p>`;$('patternList').appendChild(div)});$('patternModal').classList.add('open')}
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function printPatterns(){let pages='';patternPieces.forEach(p=>{let sw=p.w*10+state.seam*20+10,sh=p.h*10+state.seam*20+10;let cols=Math.max(1,Math.ceil(sw/190)),rows=Math.max(1,Math.ceil(sh/277));for(let ry=0;ry<rows;ry++)for(let cx=0;cx<cols;cx++){let x=cx*190,y=ry*277;let s=`<svg xmlns="http://www.w3.org/2000/svg" width="190mm" height="277mm" viewBox="${x} ${y} 190 277"><rect x="${x+5}" y="${y+5}" width="${sw}" height="${sh}" fill="none" stroke="#222" stroke-width=".4"/>`;let seam=state.seam*10,w=p.w*10,h=p.h*10;s+=`<rect x="${x+5+seam}" y="${y+5+seam}" width="${w}" height="${h}" fill="none" stroke="#777" stroke-dasharray="2 1" stroke-width=".3"/>`;s+=`<text x="${x+8}" y="${y+13}" font-size="3.5">${escapeXml(p.name)} — หน้า ${cx+1}/${cols}, ${ry+1}/${rows}</text>`;s+=`<path d="M ${x+2} ${y+2} h 6 M ${x+5} ${y-1} v 6 M ${x+184} ${y+2} h 6 M ${x+187} ${y-1} v 6" stroke="#222" stroke-width=".3"/>`;s+=`<text x="${x+10}" y="${y+270}" font-size="3">พิมพ์ 100% • ทดสอบสเกล 5 × 5 ซม. ก่อนตัด</text></svg>`;pages+=`<section class="sheet">${s}</section>`}});let win=window.open('','_blank');if(!win){toast('เบราว์เซอร์บล็อกหน้าพิมพ์ กรุณาอนุญาตป๊อปอัป');return}win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Bag Pattern</title><style>@page{size:A4;margin:10mm}body{margin:0;font-family:Arial,sans-serif}.sheet{width:190mm;height:277mm;page-break-after:always;overflow:hidden}.sheet svg{display:block;width:190mm;height:277mm}@media screen{body{background:#ddd}.sheet{background:white;margin:10px auto;box-shadow:0 1px 6px #999}}</style></head><body>${pages}<script>window.onload=()=>setTimeout(()=>window.print(),500)<\/script></body></html>`);win.document.close()}
-function downloadPattern(){let all=patternPieces.map(p=>makePieceSvg(p)).join('\n');downloadBlob(new Blob([all],{type:'image/svg+xml'}),'smart-bag-pattern-pieces.svg')}
+function printPatterns(){
+ if(!patternPieces.length) patternPieces=generatePieces();
+ let pages='';
+ const tileW=200, tileH=287, pageW=210, pageH=297, inset=5;
+ patternPieces.forEach(p=>{
+  const sw=p.w*10+state.seam*20+10, sh=p.h*10+state.seam*20+10;
+  const cols=Math.max(1,Math.ceil(sw/tileW)), rows=Math.max(1,Math.ceil(sh/tileH));
+  const seam=state.seam*10, w=p.w*10, h=p.h*10;
+  for(let ry=0;ry<rows;ry++){
+   for(let cx=0;cx<cols;cx++){
+    const x=cx*tileW, y=ry*tileH;
+    let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${tileW}mm" height="${tileH}mm" viewBox="${x} ${y} ${tileW} ${tileH}">`;
+    s+=`<rect x="${x+5}" y="${y+5}" width="${sw}" height="${sh}" fill="none" stroke="#222" stroke-width=".4"/>`;
+    s+=`<rect x="${x+5+seam}" y="${y+5+seam}" width="${w}" height="${h}" fill="none" stroke="#777" stroke-dasharray="2 1" stroke-width=".3"/>`;
+    s+=`<text x="${x+8}" y="${y+13}" font-size="3.5">${escapeXml(p.name)} — หน้า ${cx+1}/${cols}, ${ry+1}/${rows}</text>`;
+    s+=`<path d="M ${x+2} ${y+2} h 6 M ${x+5} ${y-1} v 6 M ${x+tileW-8} ${y+2} h 6 M ${x+tileW-5} ${y-1} v 6" fill="none" stroke="#222" stroke-width=".3"/>`;
+    s+=`<text x="${x+10}" y="${y+280}" font-size="3">พิมพ์ 100% • ทดสอบสเกล 5 × 5 ซม. ก่อนตัด</text></svg>`;
+    pages+=`<section class="sheet">${s}</section>`;
+   }
+  }
+ });
+ // Use a centered, fixed-size A4 page. Keep printable content at 200 x 287 mm,
+ // avoiding the old 190 x 277 mm tiles that created nearly-empty extra pages.
+ const printHtml=`<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bag Pattern</title><style>
+ @page{size:A4 portrait;margin:0}
+ *{box-sizing:border-box}
+ html,body{margin:0;padding:0;font-family:Arial,sans-serif;background:#fff}
+ .sheet{width:210mm;height:297mm;padding:5mm;display:flex;align-items:center;justify-content:center;overflow:hidden;break-after:page;page-break-after:always}
+ .sheet:last-child{break-after:auto;page-break-after:auto}
+ .sheet svg{display:block;width:200mm;height:287mm;flex:none}
+ @media screen{body{background:#e5e5e5}.sheet{margin:10px auto;background:#fff;box-shadow:0 1px 6px #999}}
+ @media print{html,body{width:210mm;margin:0;padding:0}.sheet{margin:0;box-shadow:none}}
+ </style></head><body>${pages}<script>
+ window.addEventListener('load',()=>{const imgs=[...document.images];Promise.all(imgs.map(i=>i.decode?i.decode().catch(()=>{}):Promise.resolve())).then(()=>setTimeout(()=>window.print(),700))});
+ <\/script></body></html>`;
+ let win=window.open('','_blank');
+ if(!win){toast('เบราว์เซอร์บล็อกหน้าพิมพ์ กรุณาอนุญาตป๊อปอัปสำหรับเว็บไซต์นี้');return}
+ win.document.open();win.document.write(printHtml);win.document.close();
+}function downloadPattern(){let all=patternPieces.map(p=>makePieceSvg(p)).join('\n');downloadBlob(new Blob([all],{type:'image/svg+xml'}),'smart-bag-pattern-pieces.svg')}
 function applyColor(color){if(state.selected){let it=selected();if(it)it.color=color}else state.bodyColor=color;$('bodyColor').value=state.bodyColor;render()}
 function setupPhoto(fileOverride){
  const input=$('fabricFile'),file=fileOverride||(input.files&&input.files[0]);
