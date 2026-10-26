@@ -32,6 +32,13 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
 .footer-note{max-width:1550px;margin:0 auto 20px;padding:0 18px;color:var(--muted);font-size:11px;line-height:1.6}
 .modal{position:fixed;inset:0;background:#24221dbb;z-index:20;display:none;align-items:center;justify-content:center;padding:12px}.modal.open{display:flex}.modal-card{background:var(--panel);border-radius:16px;max-width:1000px;width:100%;max-height:92vh;overflow:auto;padding:18px}.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.modal-head h2{font-size:18px;margin:0}.pattern-info{font-size:12px;color:var(--muted);line-height:1.6}.pattern-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:15px}.pattern-piece{border:1px solid var(--line);padding:10px;border-radius:12px;background:white}.pattern-piece h4{font-size:12px;margin:0 0 8px}.pattern-piece svg{width:100%;height:150px;border:1px dashed #ddd;background:#fff}.pattern-piece p{font-size:11px;color:var(--muted);margin:7px 0 0}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282720;color:white;padding:11px 15px;border-radius:12px;z-index:50;font-size:13px;box-shadow:0 4px 20px #0002;display:none;max-width:90vw}
+.draw-mode #designSvg{cursor:crosshair}
+.rotate-handle{cursor:grab;touch-action:none}
+.custom-list-title{font-size:11px;color:var(--muted);margin:12px 0 6px;font-weight:700}
+.custom-library-row{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:9px;padding:7px;margin-top:6px;background:white}
+.custom-library-row span{flex:1;font-size:11px;min-width:0;overflow-wrap:anywhere}
+.custom-library-row button{padding:6px 8px;font-size:11px}
+
 @media(max-width:1050px){.layout{grid-template-columns:220px minmax(280px,1fr)}.right-panel{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}.right-panel .panel-title{grid-column:1/-1}.right-panel .panel-sub{grid-column:1/-1}}
 @media(max-width:720px){header{padding:12px}.layout{display:flex;flex-direction:column;padding:9px;gap:9px}.workspace{order:0;min-height:520px}.left-panel{order:1}.right-panel{order:2;display:block}.stage{min-height:400px}.workspace-head{padding:11px}.top-actions button{font-size:11px;padding:8px}.brand h1{font-size:16px}.panel-title{padding-top:13px}}
 @media print{body{background:white}.no-print{display:none!important}}
@@ -69,7 +76,14 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
    <div class="library-item"><div class="mini">▤</div><div><b>ช่องแบ่งด้านใน</b><small>ชิ้นผ้าสำหรับช่อง</small></div><button data-add="divider">เพิ่ม</button></div>
    <div class="library-item"><div class="mini">↔</div><div><b>สายกระเป๋า</b><small>สายผ้าแบบแบน</small></div><button data-add="strap">เพิ่ม</button></div>
    <div class="library-item"><div class="mini">▰</div><div><b>แถบตกแต่ง</b><small>เพิ่มแถบสีตัด</small></div><button data-add="band">เพิ่ม</button></div>
-   <p class="hint">นี่คือคลังต้นแบบเริ่มต้น สามารถเพิ่มรายการใหม่ในรุ่นถัดไปได้</p>
+   <p class="hint">นี่คือคลังต้นแบบเริ่มต้น สามารถเพิ่มรายการใหม่ได้เอง</p>
+   <div class="divider"></div>
+   <div class="section-label">ชิ้นส่วนกำหนดเอง (Custom)</div>
+   <button id="drawCustomBtn" class="primary" style="width:100%">✎ เริ่มวาดชิ้นส่วนเอง</button>
+   <p class="hint" id="drawHint">กดเริ่มวาด แล้วลากบนตัวกระเป๋าเพื่อวาดรูปทรงชิ้นส่วน</p>
+   <label class="field">ชื่อชิ้นส่วน <input id="customName" type="text" maxlength="32" placeholder="เช่น ช่องใส่มือถือ"></label>
+   <button id="saveCustomBtn" style="width:100%">＋ เพิ่มชิ้นที่เลือกเข้าคลัง</button>
+   <div id="customLibrary"></div>
   </div>
  </aside>
  <main class="panel workspace">
@@ -112,6 +126,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
     <label class="field">ตำแหน่ง X (ซม.) <input type="number" id="compX" min="0" max="100" step=".5"></label>
     <label class="field">ตำแหน่ง Y (ซม.) <input type="number" id="compY" min="0" max="100" step=".5"></label>
     <label class="field">สีชิ้นส่วน <input type="color" id="compColor" value="#b98f65"></label>
+    <label class="field">หมุน (องศา) <input type="number" id="compRotation" min="-360" max="360" step="5" value="0"></label>
     <button id="centerComp" style="width:100%;margin-top:5px">จัดกึ่งกลางแนวนอน</button>
    </div>
    <div class="divider"></div>
@@ -131,14 +146,14 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
 <div id="toast" class="toast"></div>
 <script>
 const $=id=>document.getElementById(id);
-const state={shape:'tote',w:30,h:25,d:10,seam:1,bodyColor:'#d8c5a7',view:'front',items:[],selected:null,nextId:1,photoColor:null,photoData:null,savedColors:[]};
+const state={shape:'tote',w:30,h:25,d:10,seam:1,bodyColor:'#d8c5a7',view:'front',items:[],selected:null,nextId:1,photoColor:null,photoData:null,savedColors:[],drawMode:false,drawPoints:[],customLibrary:[]};
 const names={pocket:'กระเป๋าปะสี่เหลี่ยม',zipper:'ช่องซิปแนวนอน',roundPocket:'ช่องกระเป๋าทรงโค้ง',divider:'ช่องแบ่งด้านใน',strap:'สายกระเป๋า',band:'แถบตกแต่ง'};
 const defaults={pocket:{w:15,h:12,x:7.5,y:8,color:'#b98f65'},zipper:{w:18,h:3,x:6,y:5,color:'#8b9b72'},roundPocket:{w:15,h:10,x:7.5,y:9,color:'#8b9b72'},divider:{w:22,h:13,x:4,y:8,color:'#e4c4c7'},strap:{w:3,h:22,x:4,y:-19,color:'#8b6849'},band:{w:24,h:3,x:3,y:18,color:'#b96e58'}};
 const cmToPx=()=>Math.min(11,340/Math.max(state.w,state.h+5));
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('toast').style.display='none',2400)}
 function shapePath(x,y,w,h,shape){if(shape==='shoulder')return `M ${x+3} ${y} Q ${x+w/2} ${y-5} ${x+w-3} ${y} L ${x+w} ${y+h-8} Q ${x+w/2} ${y+h+7} ${x} ${y+h-8} Z`;if(shape==='drawstring')return `M ${x+4} ${y+10} Q ${x} ${y+3} ${x+5} ${y} L ${x+w-5} ${y} Q ${x+w} ${y+3} ${x+w-4} ${y+10} L ${x+w-1} ${y+h-4} Q ${x+w/2} ${y+h+2} ${x+1} ${y+h-4} Z`;return `M ${x} ${y} L ${x+w} ${y} L ${x+w} ${y+h} Q ${x+w/2} ${y+h+3} ${x} ${y+h} Z`}
 function getBagGeom(){let scale=cmToPx(),w=state.w*scale,h=state.h*scale,x=(500-w)/2,y=(520-h)/2+5;if(state.view==='back'){}return {scale,w,h,x,y}}
-function render(){const svg=$('designSvg'),g=getBagGeom();svg.innerHTML='';let ns='http://www.w3.org/2000/svg';function el(tag,attrs,parent=svg){let e=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));parent.appendChild(e);return e}
+function render(){const svg=$('designSvg'),g=getBagGeom();svg.innerHTML='';let ns='http://www.w3.org/2000/svg';let target=svg;function el(tag,attrs,parent=target){let e=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));parent.appendChild(e);return e}
 el('rect',{x:0,y:0,width:500,height:520,fill:'transparent'});
 // shadow and bag
 el('ellipse',{cx:g.x+g.w/2,cy:g.y+g.h+18,rx:g.w*.55,ry:12,fill:'#000',opacity:.08});
@@ -151,20 +166,30 @@ el('path',{d:shapePath(bx,by,g.w,g.h,state.shape),fill:state.bodyColor,stroke:'#
 el('path',{d:`M ${bx+7} ${by+7} L ${bx+g.w-7} ${by+7} L ${bx+g.w-7} ${by+g.h-7} Q ${bx+g.w/2} ${by+g.h-1} ${bx+7} ${by+g.h-7} Z`,fill:'none',stroke:'#ffffffaa','stroke-width':1,'stroke-dasharray':'4 4'});
 if(state.shape!=='drawstring'){let loopW=g.w*.18,loopY=by-5;el('path',{d:`M ${bx+g.w*.22} ${by+4} C ${bx+g.w*.22} ${loopY-35},${bx+g.w*.36} ${loopY-35},${bx+g.w*.36} ${by+4}`,fill:'none',stroke:'#7c5c3d','stroke-width':Math.max(3,g.scale*.65),'stroke-linecap':'round'});el('path',{d:`M ${bx+g.w*.64} ${by+4} C ${bx+g.w*.64} ${loopY-35},${bx+g.w*.78} ${loopY-35},${bx+g.w*.78} ${by+4}`,fill:'none',stroke:'#7c5c3d','stroke-width':Math.max(3,g.scale*.65),'stroke-linecap':'round'});}
 if(state.view==='back'){el('text',{x:250,y:30,'text-anchor':'middle','font-size':12,fill:'#777'}).textContent='ด้านหลัง — ชิ้นส่วนด้านหน้าไม่แสดง';}
-state.items.forEach(it=>{if(state.view==='back'&&!it.back) return;let x=bx+it.x*g.scale,y=by+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale;let attrs={fill:it.color,stroke:it.id===state.selected?'#292720':'#756650','stroke-width':it.id===state.selected?2.5:1.2};if(it.type==='zipper'){el('rect',{x,y:y+h*.25,width:w,height:h*.5,rx:2,...attrs});el('line',{x1:x+3,y1:y+h/2,x2:x+w-3,y2:y+h/2,stroke:'#e8e2d6','stroke-width':1.5,'stroke-dasharray':'2 2'});el('rect',{x:x+w*.8,y:y+h*.35,width:w*.06,height:h*.3,fill:'#d9d5cc',stroke:'#5d5b56','stroke-width':.7});}
+state.items.forEach(it=>{if(state.view==='back'&&!it.back) return;let x=bx+it.x*g.scale,y=by+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale;let attrs={fill:it.color,stroke:it.id===state.selected?'#292720':'#756650','stroke-width':it.id===state.selected?2.5:1.2};let group=el('g',{transform:`rotate(${Number(it.rotation)||0} ${x+w/2} ${y+h/2})`});let parent=target;target=group;if(it.type==='custom'&&Array.isArray(it.points)&&it.points.length>2){let points=it.points.map(p=>`${x+p.x*w} ${y+p.y*h}`).join(' ');el('polygon',{points,...attrs});}
+else if(it.type==='zipper'){el('rect',{x,y:y+h*.25,width:w,height:h*.5,rx:2,...attrs});el('line',{x1:x+3,y1:y+h/2,x2:x+w-3,y2:y+h/2,stroke:'#e8e2d6','stroke-width':1.5,'stroke-dasharray':'2 2'});el('rect',{x:x+w*.8,y:y+h*.35,width:w*.06,height:h*.3,fill:'#d9d5cc',stroke:'#5d5b56','stroke-width':.7});}
 else if(it.type==='roundPocket'){el('path',{d:`M ${x} ${y+5} Q ${x} ${y} ${x+5} ${y} L ${x+w-5} ${y} Q ${x+w} ${y} ${x+w} ${y+5} L ${x+w} ${y+h-8} Q ${x+w/2} ${y+h+8} ${x} ${y+h-8} Z`,...attrs});}
 else if(it.type==='strap'){el('rect',{x,y,width:w,height:h,rx:w/2,...attrs});}
 else{el('rect',{x,y,width:w,height:h,rx:it.type==='band'?2:3,...attrs});if(it.type==='pocket'||it.type==='divider')el('path',{d:`M ${x+3} ${y+4} L ${x+w-3} ${y+4}`,stroke:'#ffffffaa','stroke-width':1.2,fill:'none'});}
 if(it.id===state.selected){el('rect',{x:x-4,y:y-4,width:w+8,height:h+8,fill:'none',stroke:'#292720','stroke-dasharray':'4 3','stroke-width':1});el('circle',{cx:x+w,cy:y+h,r:4,fill:'#fff',stroke:'#292720','stroke-width':1.5});}
+target=parent;
+if(it.id===state.selected){
+ const hx=x+w+9,hy=y-12;
+ el('line',{x1:x+w*.82,y1:y,x2:hx,y2:hy,stroke:'#292720','stroke-width':1.2});
+ let rh=el('g',{class:'rotate-handle','data-rotate-id':it.id});
+ let cc=document.createElementNS(ns,'circle');cc.setAttribute('cx',hx);cc.setAttribute('cy',hy);cc.setAttribute('r',8);cc.setAttribute('fill','#fff');cc.setAttribute('stroke','#292720');cc.setAttribute('stroke-width','1.5');rh.appendChild(cc);
+ let tx=document.createElementNS(ns,'text');tx.setAttribute('x',hx);tx.setAttribute('y',hy+4);tx.setAttribute('text-anchor','middle');tx.setAttribute('font-size','12');tx.setAttribute('fill','#292720');tx.textContent='↻';rh.appendChild(tx);svg.appendChild(rh);
+}
 });
 el('text',{x:250,y:495,'text-anchor':'middle','font-size':12,fill:'#777'}).textContent=`${state.w} × ${state.h} ซม. • ความลึก ${state.d} ซม.`;
+if(state.drawMode&&state.drawPoints.length){const pts=state.drawPoints.map(p=>`${p.x} ${p.y}`).join(' ');el('polyline',{points:pts,fill:'#c7aa8366',stroke:'#282720','stroke-width':2,'stroke-dasharray':'5 3'});}
 updateSelection();
 }
 function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return '#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1)}
 function addItem(type){let d=defaults[type],it={id:state.nextId++,type,name:names[type],...d};if(type==='strap'){it.x=1;it.y=-Math.max(12,state.h*.75);it.h=Math.max(15,state.h*.85)}if(type==='divider'){it.y=state.h*.25}state.items.push(it);state.selected=it.id;state.view='front';updateViewButtons();render();toast('เพิ่ม'+it.name+'แล้ว')}
 function selected(){return state.items.find(x=>x.id===state.selected)}
-function updateSelection(){let it=selected();$('selectionInfo').style.display=it?'none':'block';$('componentControls').style.display=it?'block':'none';if(!it)return;$('componentName').textContent=it.name;$('compW').value=it.w;$('compH').value=it.h;$('compX').value=it.x;$('compY').value=it.y;$('compColor').value=it.color;}
-function updateFromControls(){let it=selected();if(!it)return;it.w=Math.max(1,Number($('compW').value)||1);it.h=Math.max(1,Number($('compH').value)||1);it.x=Number($('compX').value)||0;it.y=Number($('compY').value)||0;it.color=$('compColor').value;render()}
+function updateSelection(){let it=selected();$('selectionInfo').style.display=it?'none':'block';$('componentControls').style.display=it?'block':'none';if(!it)return;$('componentName').textContent=it.name;$('compW').value=it.w;$('compH').value=it.h;$('compX').value=it.x;$('compY').value=it.y;$('compColor').value=it.color;$('compRotation').value=Number(it.rotation)||0;}
+function updateFromControls(){let it=selected();if(!it)return;it.w=Math.max(1,Number($('compW').value)||1);it.h=Math.max(1,Number($('compH').value)||1);it.x=Number($('compX').value)||0;it.y=Number($('compY').value)||0;it.color=$('compColor').value;it.rotation=Number($('compRotation').value)||0;render()}
 function applyBag(){state.w=clamp(Number($('bagW').value)||30,10,100);state.h=clamp(Number($('bagH').value)||25,10,100);state.d=clamp(Number($('bagD').value)||0,0,60);state.seam=clamp(Number($('seam').value)||0,0,3);$('bagW').value=state.w;$('bagH').value=state.h;$('bagD').value=state.d;state.items.forEach(it=>{if(it.x+it.w>state.w)it.x=Math.max(0,state.w-it.w);if(it.y+it.h>state.h)it.y=Math.max(0,state.h-it.h)});render();toast('อัปเดตขนาดแล้ว — ตรวจตำแหน่งชิ้นส่วนอีกครั้ง')}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function updateViewButtons(){[['frontView','front'],['backView','back'],['mock3d','mock3d']].forEach(([id,v])=>$(id).classList.toggle('active',state.view===v))}
@@ -231,19 +256,101 @@ $('bodyColor').addEventListener('input',e=>{state.bodyColor=e.target.value;rende
 $('applyBag').onclick=applyBag;['bagW','bagH','bagD','seam'].forEach(id=>$(id).addEventListener('change',applyBag));
 document.querySelectorAll('[data-shape]').forEach(b=>b.onclick=()=>{state.shape=b.dataset.shape;document.querySelectorAll('[data-shape]').forEach(x=>x.classList.toggle('active',x===b));render()});
 document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addItem(b.dataset.add));
-['compW','compH','compX','compY','compColor'].forEach(id=>$(id).addEventListener('change',updateFromControls));
+['compW','compH','compX','compY','compColor','compRotation'].forEach(id=>$(id).addEventListener('change',updateFromControls));
 $('centerComp').onclick=()=>{let it=selected();if(it){it.x=(state.w-it.w)/2;$('compX').value=it.x;render()}};
 $('deleteBtn').onclick=()=>{if(!state.selected){toast('เลือกชิ้นส่วนก่อน');return}state.items=state.items.filter(i=>i.id!==state.selected);state.selected=null;render();toast('ลบชิ้นส่วนแล้ว')};
 $('resetBtn').onclick=()=>{if(confirm('เริ่มแบบใหม่? การเปลี่ยนแปลงที่ยังไม่บันทึกจะหายไป')){state.items=[];state.selected=null;state.nextId=1;state.w=30;state.h=25;state.d=10;state.seam=1;state.bodyColor='#d8c5a7';state.shape='tote';state.view='front';syncInputs();render()}};
 $('saveBtn').onclick=save;$('loadBtn').onclick=load;$('exportSvgBtn').onclick=svgExport;$('patternBtn').onclick=showPattern;$('closePattern').onclick=()=>$('patternModal').classList.remove('open');$('printPattern').onclick=printPatterns;$('downloadPatternSvg').onclick=downloadPattern;
 $('frontView').onclick=()=>{state.view='front';updateViewButtons();render()};$('backView').onclick=()=>{state.view='back';updateViewButtons();render()};$('mock3d').onclick=()=>{state.view='mock3d';updateViewButtons();render()};
-let drag=null;const svg=$('designSvg');
-svg.addEventListener('pointerdown',e=>{let pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;let p=pt.matrixTransform(svg.getScreenCTM().inverse());let g=getBagGeom();let hit=null;for(let i=state.items.length-1;i>=0;i--){let it=state.items[i],x=g.x+it.x*g.scale,y=g.y+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale;if(p.x>=x-5&&p.x<=x+w+5&&p.y>=y-5&&p.y<=y+h+5){hit=it;break}}if(hit){state.selected=hit.id;drag={id:hit.id,x:p.x,y:p.y,ix:hit.x,iy:hit.y,scale:g.scale};svg.setPointerCapture(e.pointerId);render()}});
-svg.addEventListener('pointermove',e=>{if(!drag)return;let pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;let p=pt.matrixTransform(svg.getScreenCTM().inverse()),it=state.items.find(i=>i.id===drag.id);if(!it)return;it.x=Math.round((drag.ix+(p.x-drag.x)/drag.scale)*2)/2;it.y=Math.round((drag.iy+(p.y-drag.y)/drag.scale)*2)/2;$('compX').value=it.x;$('compY').value=it.y;render()});
-svg.addEventListener('pointerup',()=>{drag=null});
+let drag=null,rotateDrag=null,drawActive=false;const svg=$('designSvg');
+function svgPoint(e){let pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse())}
+svg.addEventListener('pointerdown',e=>{
+ let p=svgPoint(e),g=getBagGeom();
+ if(state.drawMode){
+  drawActive=true;state.drawPoints=[{x:p.x,y:p.y}];svg.setPointerCapture(e.pointerId);render();return;
+ }
+ const rotNode=e.target.closest&&e.target.closest('[data-rotate-id]');
+ if(rotNode){
+  const it=state.items.find(i=>i.id===Number(rotNode.getAttribute('data-rotate-id')));if(!it)return;
+  const x=g.x+it.x*g.scale,y=g.y+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale,cx=x+w/2,cy=y+h/2;
+  rotateDrag={id:it.id,cx,cy,startAngle:Math.atan2(p.y-cy,p.x-cx)*180/Math.PI,startRotation:Number(it.rotation)||0};
+  svg.setPointerCapture(e.pointerId);e.preventDefault();return;
+ }
+ let hit=null;
+ for(let i=state.items.length-1;i>=0;i--){
+  let it=state.items[i],x=g.x+it.x*g.scale,y=g.y+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale;
+  if(p.x>=x-5&&p.x<=x+w+5&&p.y>=y-5&&p.y<=y+h+5){hit=it;break}
+ }
+ if(hit){state.selected=hit.id;drag={id:hit.id,x:p.x,y:p.y,ix:hit.x,iy:hit.y,scale:g.scale};svg.setPointerCapture(e.pointerId);render()}
+});
+svg.addEventListener('pointermove',e=>{
+ if(state.drawMode&&drawActive){const p=svgPoint(e);const last=state.drawPoints[state.drawPoints.length-1];if(!last||Math.hypot(p.x-last.x,p.y-last.y)>3)state.drawPoints.push({x:p.x,y:p.y});render();return}
+ if(rotateDrag){
+  const p=svgPoint(e),angle=Math.atan2(p.y-rotateDrag.cy,p.x-rotateDrag.cx)*180/Math.PI;
+  const it=state.items.find(i=>i.id===rotateDrag.id);if(!it)return;
+  it.rotation=Math.round((rotateDrag.startRotation+angle-rotateDrag.startAngle)*1)/1;
+  render();return;
+ }
+ if(!drag)return;
+ const p=svgPoint(e),it=state.items.find(i=>i.id===drag.id);if(!it)return;
+ it.x=Math.round((drag.ix+(p.x-drag.x)/drag.scale)*2)/2;it.y=Math.round((drag.iy+(p.y-drag.y)/drag.scale)*2)/2;
+ $('compX').value=it.x;$('compY').value=it.y;render();
+});
+function endPointer(){if(state.drawMode&&drawActive){drawActive=false;render();return}drag=null;rotateDrag=null}
+svg.addEventListener('pointerup',endPointer);svg.addEventListener('pointercancel',endPointer);
+$('drawCustomBtn').onclick=startCustomDrawing;
+$('saveCustomBtn').onclick=saveSelectedCustom;
 function clampItems(){state.items.forEach(it=>{it.x=clamp(it.x,0,Math.max(0,state.w-it.w));it.y=clamp(it.y,-Math.max(0,it.h-state.h),Math.max(0,state.h-it.h))})}
 $('compX').addEventListener('change',()=>{let it=selected();if(it){it.x=Number($('compX').value)||0;render()}});$('compY').addEventListener('change',()=>{let it=selected();if(it){it.y=Number($('compY').value)||0;render()}});
-function init(){syncInputs();render();renderSavedColors()}
+function loadCustomLibrary(){
+ try{state.customLibrary=JSON.parse(localStorage.getItem('smartBagCustomLibrary')||'[]')}catch(e){state.customLibrary=[]}
+ renderCustomLibrary();
+}
+function renderCustomLibrary(){
+ const root=$('customLibrary');if(!root)return;root.innerHTML='';
+ if(!state.customLibrary.length){root.innerHTML='<p class="hint">ยังไม่มีชิ้นส่วนที่บันทึกไว้</p>';return}
+ const title=document.createElement('div');title.className='custom-list-title';title.textContent='ชิ้นส่วนของฉัน';root.appendChild(title);
+ state.customLibrary.forEach((item,index)=>{
+  const row=document.createElement('div');row.className='custom-library-row';
+  const label=document.createElement('span');label.textContent=item.name;row.appendChild(label);
+  const add=document.createElement('button');add.textContent='เพิ่ม';add.onclick=()=>addCustomItem(index);row.appendChild(add);
+  const del=document.createElement('button');del.textContent='ลบ';del.title='ลบจากคลัง';del.onclick=()=>{state.customLibrary.splice(index,1);localStorage.setItem('smartBagCustomLibrary',JSON.stringify(state.customLibrary));renderCustomLibrary();toast('ลบออกจากคลังแล้ว')};row.appendChild(del);root.appendChild(row);
+ });
+}
+function addCustomItem(index){
+ const src=state.customLibrary[index];if(!src)return;
+ const it={id:state.nextId++,type:'custom',name:src.name,w:src.w||12,h:src.h||8,x:Math.max(0,(state.w-(src.w||12))/2),y:Math.max(0,(state.h-(src.h||8))/2),color:src.color||'#8b9b72',points:JSON.parse(JSON.stringify(src.points||[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}])),rotation:0};
+ state.items.push(it);state.selected=it.id;state.view='front';updateViewButtons();render();toast('เพิ่ม '+it.name+' ลงบนกระเป๋าแล้ว');
+}
+function startCustomDrawing(){
+ state.drawMode=!state.drawMode;state.drawPoints=[];
+ $('drawCustomBtn').classList.toggle('active',state.drawMode);
+ $('drawCustomBtn').textContent=state.drawMode?'✓ วาดเสร็จ / ยกเลิกวาด':'✎ เริ่มวาดชิ้นส่วนเอง';
+ $('drawHint').textContent=state.drawMode?'ลากนิ้วหรือเมาส์บนตัวกระเป๋าเพื่อวาดขอบชิ้นส่วน เมื่อเสร็จให้กดปุ่มนี้อีกครั้ง':'กดเริ่มวาด แล้วลากบนตัวกระเป๋าเพื่อวาดรูปทรงชิ้นส่วน';
+ $('designSvg').style.cursor=state.drawMode?'crosshair':'default';
+ document.body.classList.toggle('draw-mode',state.drawMode);
+ if(!state.drawMode && state.drawPoints.length>=3) finishCustomDrawing();
+ else if(!state.drawMode){state.drawPoints=[];render()}
+}
+function finishCustomDrawing(){
+ const pts=state.drawPoints.slice();state.drawPoints=[];
+ if(pts.length<3){render();toast('วาดอย่างน้อย 3 จุดเพื่อสร้างชิ้นส่วน');return}
+ const g=getBagGeom(),minX=Math.min(...pts.map(p=>p.x)),maxX=Math.max(...pts.map(p=>p.x)),minY=Math.min(...pts.map(p=>p.y)),maxY=Math.max(...pts.map(p=>p.y));
+ const w=Math.max(1,(maxX-minX)/g.scale),h=Math.max(1,(maxY-minY)/g.scale);
+ const norm=pts.map(p=>({x:(p.x-minX)/Math.max(1,maxX-minX),y:(p.y-minY)/Math.max(1,maxY-minY)}));
+ const it={id:state.nextId++,type:'custom',name:($('customName').value||'ชิ้นส่วนวาดเอง').trim(),w,h,x:(minX-g.x)/g.scale,y:(minY-g.y)/g.scale,color:'#8b9b72',points:norm,rotation:0};
+ state.items.push(it);state.selected=it.id;render();toast('สร้างชิ้นส่วนแล้ว ปรับขนาด/หมุนได้ทางพื้นที่ออกแบบ');
+}
+function saveSelectedCustom(){
+ const it=selected();if(!it){toast('เลือกชิ้นส่วนก่อนบันทึกเข้าคลัง');return}
+ let points=it.points;
+ if(!points||it.type!=='custom'){points=[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}]}
+ const name=($('customName').value||it.name||'ชิ้นส่วนของฉัน').trim();
+ const entry={name,w:it.w,h:it.h,color:it.color,points:JSON.parse(JSON.stringify(points))};
+ state.customLibrary.unshift(entry);state.customLibrary=state.customLibrary.slice(0,50);
+ try{localStorage.setItem('smartBagCustomLibrary',JSON.stringify(state.customLibrary));renderCustomLibrary();toast('บันทึก '+name+' เข้าคลังแล้ว กด “เพิ่ม” เพื่อใช้ครั้งต่อไป')}catch(e){toast('บันทึกไม่สำเร็จ พื้นที่จัดเก็บอาจเต็ม')}
+}
+function init(){syncInputs();loadCustomLibrary();render();renderSavedColors()}
 init();
 </script>
 </body></html>
