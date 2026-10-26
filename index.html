@@ -116,14 +116,14 @@ body.draw-mode #designSvg{touch-action:pan-y;-webkit-tap-highlight-color:transpa
    <div class="upload-zone" id="uploadZone" role="group" aria-label="นำเข้ารูปผ้า">
     <span class="upload-icon">＋</span>
     <strong id="uploadTitle">นำเข้ารูปผ้า</strong>
-    <small id="uploadHint">เลือกจากคลังรูปภาพ หรือถ่ายผ้าใหม่</small>
+    <small id="uploadHint">เลือกจากคลังรูปภาพ หรือเปิดกล้อง iPad</small>
    </div>
    <div class="grid2" style="margin-top:7px">
     <button type="button" id="chooseFabricBtn">▧ เลือกจากรูปภาพ</button>
-    <button type="button" id="takeFabricBtn">◎ ถ่ายรูปผ้า</button>
+    <button type="button" id="takeFabricBtn">◎ เปิดกล้อง iPad</button>
    </div>
    <input type="file" id="fabricFile" accept="image/*" class="file-input" aria-label="เลือกภาพผ้าจากคลังรูปภาพ">
-   <input type="file" id="cameraFabricFile" accept="image/*" capture="environment" class="file-input" aria-label="ถ่ายภาพผ้าด้วยกล้อง">
+   <input type="file" id="cameraFabricFile" accept="image/*" capture="environment" class="file-input" aria-label="เปิดกล้อง iPad เพื่อถ่ายภาพผ้า">
    <canvas id="photoCanvas" title="แตะบริเวณสีผ้าที่ต้องการเลือก"></canvas>
    <p id="photoStatus" class="hint">เมื่อรูปแสดงแล้ว ให้แตะบริเวณสีผ้าบนรูปเพื่อเก็บสีตัวอย่าง แล้วกด “ใช้สีผ้าที่เลือก”</p>
    <p class="hint">รองรับ JPG, PNG, WEBP และรูปภาพจากกล้อง</p>
@@ -160,14 +160,6 @@ body.draw-mode #designSvg{touch-action:pan-y;-webkit-tap-highlight-color:transpa
  <div class="pattern-list" id="patternList"></div>
  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:15px"><button class="primary" id="printPattern">พิมพ์ / บันทึก PDF</button><button id="downloadPatternSvg">ดาวน์โหลดแพทเทิร์น SVG</button></div>
  </div></div>
-<div class="camera-modal" id="cameraModal" aria-hidden="true">
- <div class="camera-card">
-  <div class="camera-head"><strong>ถ่ายรูปผ้าด้วยกล้อง iPad</strong><button type="button" id="closeCameraBtn">ปิด</button></div>
-  <video id="cameraVideo" autoplay muted playsinline></video>
-  <p class="hint" id="cameraStatus">กำลังเตรียมกล้อง… หากมีหน้าต่างขอสิทธิ์ ให้เลือกอนุญาต</p>
-  <div class="camera-actions"><button type="button" id="switchCameraBtn">สลับกล้อง</button><button type="button" class="primary" id="captureCameraBtn">ถ่ายภาพ</button></div>
- </div>
-</div>
 <div id="toast" class="toast"></div>
 <script>
 const $=id=>document.getElementById(id);
@@ -292,40 +284,18 @@ $('photoCanvas').addEventListener('click',e=>{if(Date.now()-lastCanvasTouch<700)
 function renderSavedColors(){$('savedColors').innerHTML='';state.savedColors.forEach(c=>{let b=document.createElement('button');b.className='swatch';b.style.background=c;b.title=c;b.onclick=()=>{state.photoColor=c;applyColor(c)};$('savedColors').appendChild(b)})}
 // iPad/iOS Safari: trigger the native picker directly from a user tap.
 $('chooseFabricBtn').addEventListener('click',()=>{const input=$('fabricFile');input.value='';input.click()});
-let activeCameraStream=null,cameraFacing='environment';
-async function openFabricCamera(){
- const modal=$('cameraModal'),video=$('cameraVideo'),status=$('cameraStatus');
- modal.classList.add('open');modal.setAttribute('aria-hidden','false');status.textContent='กำลังขออนุญาตใช้กล้อง…';
- if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-  status.textContent='เบราว์เซอร์นี้ไม่รองรับกล้องในหน้าเว็บ กำลังเปิดตัวเลือกถ่ายภาพของ iPad แทน';
-  setTimeout(()=>{closeFabricCamera();const input=$('cameraFabricFile');input.value='';input.click()},700);return;
- }
- try{
-  stopFabricCamera();
-  activeCameraStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:cameraFacing},width:{ideal:1280},height:{ideal:960}}});
-  video.srcObject=activeCameraStream;
-  try{await video.play()}catch(e){}
-  status.textContent='จัดผ้าให้อยู่ในกรอบ แล้วกด “ถ่ายภาพ”';
- }catch(err){
-  let msg='เปิดกล้องไม่ได้';
-  if(err&&err.name==='NotAllowedError')msg='ยังไม่ได้อนุญาตใช้กล้อง ให้ตรวจสิทธิ์กล้องของ Safari/เว็บไซต์ในการตั้งค่า iPad';
-  else if(err&&err.name==='NotFoundError')msg='ไม่พบกล้องที่ใช้งานได้';
-  else if(err&&err.name==='NotReadableError')msg='กล้องอาจกำลังถูกใช้งานโดยแอปอื่น';
-  status.textContent=msg+' — กำลังเปิดตัวเลือกถ่ายภาพของ iPad แทน';
-  setTimeout(()=>{closeFabricCamera();const input=$('cameraFabricFile');input.value='';input.click()},1100);
- }
-}
-function stopFabricCamera(){if(activeCameraStream){activeCameraStream.getTracks().forEach(t=>t.stop());activeCameraStream=null}const v=$('cameraVideo');if(v)v.srcObject=null}
-function closeFabricCamera(){$('cameraModal').classList.remove('open');$('cameraModal').setAttribute('aria-hidden','true');stopFabricCamera()}
-$('takeFabricBtn').addEventListener('click',openFabricCamera);
-$('closeCameraBtn').addEventListener('click',closeFabricCamera);
-$('cameraModal').addEventListener('click',e=>{if(e.target===$('cameraModal'))closeFabricCamera()});
-$('captureCameraBtn').addEventListener('click',()=>{
- const v=$('cameraVideo');if(!activeCameraStream||!v.videoWidth){$('cameraStatus').textContent='กล้องยังไม่พร้อม รอสักครู่แล้วลองอีกครั้ง';return}
- const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0,c.width,c.height);
- c.toBlob(blob=>{if(!blob){$('cameraStatus').textContent='ถ่ายภาพไม่สำเร็จ กรุณาลองใหม่';return}closeFabricCamera();setupPhoto(blob);},'image/jpeg',.92);
+// iPad/Safari: open the native camera picker directly from the user's tap.
+// Delayed input.click() after an async permission request is often blocked by iOS.
+$('takeFabricBtn').addEventListener('click',()=>{
+ const input=$('cameraFabricFile');
+ input.value='';
+ input.click();
 });
-$('switchCameraBtn').addEventListener('click',async()=>{cameraFacing=cameraFacing==='environment'?'user':'environment';await openFabricCamera()});
+$('cameraFabricFile').addEventListener('change',e=>{
+ const file=e.target.files&&e.target.files[0];
+ if(file) setupPhoto(file);
+ e.target.value='';
+});
 $('fabricFile').addEventListener('change',e=>{setupPhoto(e.target.files&&e.target.files[0]);e.target.value=''});
 $('cameraFabricFile').addEventListener('change',e=>{setupPhoto(e.target.files&&e.target.files[0]);e.target.value=''});
 $('uploadZone').addEventListener('click',()=>{const input=$('fabricFile');input.value='';input.click()});
