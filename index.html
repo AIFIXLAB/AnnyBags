@@ -21,6 +21,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
 .bottom-strip{padding:12px 15px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.status{font-size:12px;color:var(--muted)}.props{padding:0 14px 15px}.props h3{font-size:13px;margin:12px 0}.empty{padding:12px;background:#f8f3ea;border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6}
 .color-row{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.swatch{width:27px;height:27px;border-radius:8px;border:2px solid white;box-shadow:0 0 0 1px #d8d0c4;cursor:pointer}.swatch.chosen{box-shadow:0 0 0 2px var(--ink)}
 .library-item{display:flex;align-items:center;gap:9px;padding:10px 9px;border:1px solid var(--line);border-radius:11px;margin:7px 0;background:#fff}.library-item .mini{width:42px;height:34px;border:1px solid #d8cdbc;border-radius:6px;display:grid;place-items:center;background:#f4eee4;font-size:19px}.library-item div:nth-child(2){flex:1;min-width:0}.library-item b{font-size:12px;display:block}.library-item small{font-size:10px;color:var(--muted)}.library-item button{padding:7px 9px;font-size:11px}
+.camera-modal{position:fixed;inset:0;z-index:100;background:#171613dd;display:none;align-items:center;justify-content:center;padding:14px}.camera-modal.open{display:flex}.camera-card{background:#fffdf8;border-radius:16px;padding:14px;width:min(100%,620px);max-height:95dvh;overflow:auto}.camera-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.camera-head strong{font-size:15px}.camera-card video{display:block;width:100%;max-height:65dvh;min-height:220px;object-fit:contain;background:#1e1e1e;border-radius:12px}.camera-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.camera-actions button{min-height:48px}
 #photoCanvas{width:100%;max-height:150px;object-fit:contain;background:#f6f0e6;border-radius:10px;margin-top:8px;display:none;touch-action:manipulation}
 .file-input{position:fixed;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0;pointer-events:none}
 #chooseFabricBtn,#takeFabricBtn{min-height:46px;font-size:12px;touch-action:manipulation;-webkit-appearance:none}
@@ -159,6 +160,14 @@ body.draw-mode #designSvg{touch-action:pan-y;-webkit-tap-highlight-color:transpa
  <div class="pattern-list" id="patternList"></div>
  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:15px"><button class="primary" id="printPattern">พิมพ์ / บันทึก PDF</button><button id="downloadPatternSvg">ดาวน์โหลดแพทเทิร์น SVG</button></div>
  </div></div>
+<div class="camera-modal" id="cameraModal" aria-hidden="true">
+ <div class="camera-card">
+  <div class="camera-head"><strong>ถ่ายรูปผ้าด้วยกล้อง iPad</strong><button type="button" id="closeCameraBtn">ปิด</button></div>
+  <video id="cameraVideo" autoplay muted playsinline></video>
+  <p class="hint" id="cameraStatus">กำลังเตรียมกล้อง… หากมีหน้าต่างขอสิทธิ์ ให้เลือกอนุญาต</p>
+  <div class="camera-actions"><button type="button" id="switchCameraBtn">สลับกล้อง</button><button type="button" class="primary" id="captureCameraBtn">ถ่ายภาพ</button></div>
+ </div>
+</div>
 <div id="toast" class="toast"></div>
 <script>
 const $=id=>document.getElementById(id);
@@ -283,7 +292,40 @@ $('photoCanvas').addEventListener('click',e=>{if(Date.now()-lastCanvasTouch<700)
 function renderSavedColors(){$('savedColors').innerHTML='';state.savedColors.forEach(c=>{let b=document.createElement('button');b.className='swatch';b.style.background=c;b.title=c;b.onclick=()=>{state.photoColor=c;applyColor(c)};$('savedColors').appendChild(b)})}
 // iPad/iOS Safari: trigger the native picker directly from a user tap.
 $('chooseFabricBtn').addEventListener('click',()=>{const input=$('fabricFile');input.value='';input.click()});
-$('takeFabricBtn').addEventListener('click',()=>{const input=$('cameraFabricFile');input.value='';input.click()});
+let activeCameraStream=null,cameraFacing='environment';
+async function openFabricCamera(){
+ const modal=$('cameraModal'),video=$('cameraVideo'),status=$('cameraStatus');
+ modal.classList.add('open');modal.setAttribute('aria-hidden','false');status.textContent='กำลังขออนุญาตใช้กล้อง…';
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+  status.textContent='เบราว์เซอร์นี้ไม่รองรับกล้องในหน้าเว็บ กำลังเปิดตัวเลือกถ่ายภาพของ iPad แทน';
+  setTimeout(()=>{closeFabricCamera();const input=$('cameraFabricFile');input.value='';input.click()},700);return;
+ }
+ try{
+  stopFabricCamera();
+  activeCameraStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:cameraFacing},width:{ideal:1280},height:{ideal:960}}});
+  video.srcObject=activeCameraStream;
+  try{await video.play()}catch(e){}
+  status.textContent='จัดผ้าให้อยู่ในกรอบ แล้วกด “ถ่ายภาพ”';
+ }catch(err){
+  let msg='เปิดกล้องไม่ได้';
+  if(err&&err.name==='NotAllowedError')msg='ยังไม่ได้อนุญาตใช้กล้อง ให้ตรวจสิทธิ์กล้องของ Safari/เว็บไซต์ในการตั้งค่า iPad';
+  else if(err&&err.name==='NotFoundError')msg='ไม่พบกล้องที่ใช้งานได้';
+  else if(err&&err.name==='NotReadableError')msg='กล้องอาจกำลังถูกใช้งานโดยแอปอื่น';
+  status.textContent=msg+' — กำลังเปิดตัวเลือกถ่ายภาพของ iPad แทน';
+  setTimeout(()=>{closeFabricCamera();const input=$('cameraFabricFile');input.value='';input.click()},1100);
+ }
+}
+function stopFabricCamera(){if(activeCameraStream){activeCameraStream.getTracks().forEach(t=>t.stop());activeCameraStream=null}const v=$('cameraVideo');if(v)v.srcObject=null}
+function closeFabricCamera(){$('cameraModal').classList.remove('open');$('cameraModal').setAttribute('aria-hidden','true');stopFabricCamera()}
+$('takeFabricBtn').addEventListener('click',openFabricCamera);
+$('closeCameraBtn').addEventListener('click',closeFabricCamera);
+$('cameraModal').addEventListener('click',e=>{if(e.target===$('cameraModal'))closeFabricCamera()});
+$('captureCameraBtn').addEventListener('click',()=>{
+ const v=$('cameraVideo');if(!activeCameraStream||!v.videoWidth){$('cameraStatus').textContent='กล้องยังไม่พร้อม รอสักครู่แล้วลองอีกครั้ง';return}
+ const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+ c.toBlob(blob=>{if(!blob){$('cameraStatus').textContent='ถ่ายภาพไม่สำเร็จ กรุณาลองใหม่';return}closeFabricCamera();setupPhoto(blob);},'image/jpeg',.92);
+});
+$('switchCameraBtn').addEventListener('click',async()=>{cameraFacing=cameraFacing==='environment'?'user':'environment';await openFabricCamera()});
 $('fabricFile').addEventListener('change',e=>{setupPhoto(e.target.files&&e.target.files[0]);e.target.value=''});
 $('cameraFabricFile').addEventListener('change',e=>{setupPhoto(e.target.files&&e.target.files[0]);e.target.value=''});
 $('uploadZone').addEventListener('click',()=>{const input=$('fabricFile');input.value='';input.click()});
