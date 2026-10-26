@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Smart Bag Studio</title>
+<style>
+:root{--ink:#282720;--muted:#77766d;--paper:#fbf8f1;--panel:#fffdf8;--line:#e8e0d3;--accent:#876849;--accent2:#c7aa83;--soft:#f0e8dc;--danger:#9b4439}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,sans-serif;background:var(--paper);color:var(--ink)}
+button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#fffdf8;color:var(--ink);border-radius:11px;padding:10px 12px;font-weight:600}button:hover{border-color:var(--accent2)}button.primary{background:var(--ink);color:white;border-color:var(--ink)}button.active{background:var(--soft);border-color:var(--accent)}button.danger{color:var(--danger)}
+header{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--line);background:#fffdf8;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px}.logo{width:38px;height:38px;border-radius:12px;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:20px}.brand h1{font-size:18px;margin:0}.brand p{font-size:11px;color:var(--muted);margin:3px 0 0;letter-spacing:.8px}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}.layout{display:grid;grid-template-columns:245px minmax(280px,1fr) 275px;gap:14px;padding:14px;max-width:1600px;margin:auto}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;min-width:0}.panel-title{padding:15px 15px 10px;font-size:14px;font-weight:800}.panel-sub{padding:0 15px 12px;color:var(--muted);font-size:12px;line-height:1.5}.panel-body{padding:0 14px 15px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 12px}.tab{padding:8px 10px;font-size:12px}.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:800;margin:13px 0 8px}
+.field{display:grid;grid-template-columns:1fr 100px;gap:8px;align-items:center;margin:9px 0;font-size:13px}.field input[type=number],.field select,.text-input{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;background:white;color:var(--ink);min-width:0}.field input[type=color]{width:100%;height:36px;border:0;background:transparent}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.preset{padding:11px 8px;text-align:center;font-size:12px;min-height:72px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px}.preset .icon{font-size:23px}.hint{font-size:11px;color:var(--muted);line-height:1.5}.divider{height:1px;background:var(--line);margin:13px 0}
+.workspace{display:flex;flex-direction:column;min-height:650px}.workspace-head{padding:13px 15px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.workspace-head strong{font-size:14px}.view-actions{display:flex;gap:6px}.view-actions button{font-size:12px;padding:8px 10px}
+.stage{position:relative;flex:1;min-height:470px;display:grid;place-items:center;overflow:hidden;background-color:#f5f0e7;background-image:radial-gradient(#ded5c7 .8px,transparent .8px);background-size:17px 17px;padding:15px}
+#designSvg{width:100%;height:100%;max-height:670px;min-height:430px;touch-action:none;overflow:visible}.stage-note{position:absolute;bottom:10px;left:12px;background:#fffdf0dd;padding:7px 9px;border-radius:8px;font-size:11px;color:var(--muted);pointer-events:none}
+.bottom-strip{padding:12px 15px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.status{font-size:12px;color:var(--muted)}.props{padding:0 14px 15px}.props h3{font-size:13px;margin:12px 0}.empty{padding:12px;background:#f8f3ea;border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6}
+.color-row{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.swatch{width:27px;height:27px;border-radius:8px;border:2px solid white;box-shadow:0 0 0 1px #d8d0c4;cursor:pointer}.swatch.chosen{box-shadow:0 0 0 2px var(--ink)}
+.library-item{display:flex;align-items:center;gap:9px;padding:10px 9px;border:1px solid var(--line);border-radius:11px;margin:7px 0;background:#fff}.library-item .mini{width:42px;height:34px;border:1px solid #d8cdbc;border-radius:6px;display:grid;place-items:center;background:#f4eee4;font-size:19px}.library-item div:nth-child(2){flex:1;min-width:0}.library-item b{font-size:12px;display:block}.library-item small{font-size:10px;color:var(--muted)}.library-item button{padding:7px 9px;font-size:11px}
+#photoCanvas{width:100%;max-height:150px;object-fit:contain;background:#f6f0e6;border-radius:10px;margin-top:8px;display:none;touch-action:manipulation}
+.footer-note{max-width:1550px;margin:0 auto 20px;padding:0 18px;color:var(--muted);font-size:11px;line-height:1.6}
+.modal{position:fixed;inset:0;background:#24221dbb;z-index:20;display:none;align-items:center;justify-content:center;padding:12px}.modal.open{display:flex}.modal-card{background:var(--panel);border-radius:16px;max-width:1000px;width:100%;max-height:92vh;overflow:auto;padding:18px}.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.modal-head h2{font-size:18px;margin:0}.pattern-info{font-size:12px;color:var(--muted);line-height:1.6}.pattern-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:15px}.pattern-piece{border:1px solid var(--line);padding:10px;border-radius:12px;background:white}.pattern-piece h4{font-size:12px;margin:0 0 8px}.pattern-piece svg{width:100%;height:150px;border:1px dashed #ddd;background:#fff}.pattern-piece p{font-size:11px;color:var(--muted);margin:7px 0 0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282720;color:white;padding:11px 15px;border-radius:12px;z-index:50;font-size:13px;box-shadow:0 4px 20px #0002;display:none;max-width:90vw}
+@media(max-width:1050px){.layout{grid-template-columns:220px minmax(280px,1fr)}.right-panel{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}.right-panel .panel-title{grid-column:1/-1}.right-panel .panel-sub{grid-column:1/-1}}
+@media(max-width:720px){header{padding:12px}.layout{display:flex;flex-direction:column;padding:9px;gap:9px}.workspace{order:0;min-height:520px}.left-panel{order:1}.right-panel{order:2;display:block}.stage{min-height:400px}.workspace-head{padding:11px}.top-actions button{font-size:11px;padding:8px}.brand h1{font-size:16px}.panel-title{padding-top:13px}}
+@media print{body{background:white}.no-print{display:none!important}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand"><div class="logo">✂</div><div><h1>Smart Bag Studio</h1><p>DESIGN • CUSTOMIZE • MAKE</p></div></div>
+ <div class="top-actions">
+  <button id="saveBtn">บันทึกแบบ</button><button id="loadBtn">เปิดแบบล่าสุด</button><button id="exportSvgBtn">ส่งออก SVG</button><button class="primary" id="patternBtn">สร้างแพทเทิร์น PDF</button>
+ </div>
+</header>
+<div class="layout">
+ <aside class="panel left-panel">
+  <div class="panel-title">เริ่มออกแบบ</div><div class="panel-sub">เลือกทรงหลัก แล้วเพิ่มชิ้นส่วนด้วยการแตะหรือกด “เพิ่ม” ไม่ต้องวาดเอง</div>
+  <div class="panel-body">
+   <div class="section-label">ทรงกระเป๋าหลัก</div>
+   <div class="grid2">
+    <button class="preset active" data-shape="tote"><span class="icon">👜</span>Tote Bag</button>
+    <button class="preset" data-shape="shoulder"><span class="icon">👝</span>Shoulder</button>
+    <button class="preset" data-shape="crossbody"><span class="icon">🎒</span>Crossbody</button>
+    <button class="preset" data-shape="drawstring"><span class="icon">巾</span>Drawstring</button>
+   </div>
+   <div class="section-label">ขนาดกระเป๋า (ซม.)</div>
+   <label class="field">กว้าง <input type="number" id="bagW" min="10" max="100" value="30"></label>
+   <label class="field">สูง <input type="number" id="bagH" min="10" max="100" value="25"></label>
+   <label class="field">ลึก <input type="number" id="bagD" min="0" max="60" value="10"></label>
+   <label class="field">เผื่อตะเข็บ <input type="number" id="seam" min="0" max="3" step=".1" value="1"></label>
+   <button class="primary" style="width:100%" id="applyBag">อัปเดตขนาดกระเป๋า</button>
+   <div class="divider"></div>
+   <div class="section-label">คลังชิ้นส่วน — แตะเพื่อเพิ่ม</div>
+   <div class="library-item"><div class="mini">▱</div><div><b>กระเป๋าปะสี่เหลี่ยม</b><small>ช่องด้านหน้า</small></div><button data-add="pocket">เพิ่ม</button></div>
+   <div class="library-item"><div class="mini">⌁</div><div><b>ช่องซิปแนวนอน</b><small>แถบซิปแบบพื้นฐาน</small></div><button data-add="zipper">เพิ่ม</button></div>
+   <div class="library-item"><div class="mini">▱</div><div><b>ช่องกระเป๋าทรงโค้ง</b><small>กระเป๋าปะมุมมน</small></div><button data-add="roundPocket">เพิ่ม</button></div>
+   <div class="library-item"><div class="mini">▤</div><div><b>ช่องแบ่งด้านใน</b><small>ชิ้นผ้าสำหรับช่อง</small></div><button data-add="divider">เพิ่ม</button></div>
+   <div class="library-item"><div class="mini">↔</div><div><b>สายกระเป๋า</b><small>สายผ้าแบบแบน</small></div><button data-add="strap">เพิ่ม</button></div>
+   <div class="library-item"><div class="mini">▰</div><div><b>แถบตกแต่ง</b><small>เพิ่มแถบสีตัด</small></div><button data-add="band">เพิ่ม</button></div>
+   <p class="hint">นี่คือคลังต้นแบบเริ่มต้น สามารถเพิ่มรายการใหม่ในรุ่นถัดไปได้</p>
+  </div>
+ </aside>
+ <main class="panel workspace">
+  <div class="workspace-head"><strong>พื้นที่ออกแบบ · ด้านหน้า</strong><div class="view-actions"><button class="active" id="frontView">ด้านหน้า 2D</button><button id="backView">ด้านหลัง 2D</button><button id="mock3d">มุมมองจำลอง</button></div></div>
+  <div class="stage"><svg id="designSvg" viewBox="0 0 500 520" role="img" aria-label="พื้นที่ออกแบบกระเป๋า"></svg><div class="stage-note">แตะชิ้นส่วนเพื่อเลือก • ลากเพื่อย้าย • ปรับขนาดได้ทางแผงขวา</div></div>
+  <div class="bottom-strip"><span class="status" id="status">พร้อมออกแบบ</span><div><button id="deleteBtn" class="danger">ลบชิ้นส่วนที่เลือก</button><button id="resetBtn">เริ่มใหม่</button></div></div>
+ </main>
+ <aside class="panel right-panel">
+  <div class="panel-title">วัสดุและการปรับแต่ง</div><div class="panel-sub">เลือกชิ้นส่วนเพื่อเปลี่ยนขนาด สี และตำแหน่ง</div>
+  <div class="props">
+   <div class="section-label">สีตัวกระเป๋า</div>
+   <div class="color-row" id="bodySwatches">
+    <button class="swatch chosen" style="background:#d8c5a7" data-color="#d8c5a7" aria-label="ครีม"></button>
+    <button class="swatch" style="background:#8b9b72" data-color="#8b9b72" aria-label="เขียว"></button>
+    <button class="swatch" style="background:#2d4059" data-color="#2d4059" aria-label="กรมท่า"></button>
+    <button class="swatch" style="background:#b96e58" data-color="#b96e58" aria-label="อิฐ"></button>
+    <button class="swatch" style="background:#e4c4c7" data-color="#e4c4c7" aria-label="ชมพู"></button>
+    <button class="swatch" style="background:#45423d" data-color="#45423d" aria-label="ดำ"></button>
+   </div>
+   <label class="field">เลือกสีเอง <input type="color" id="bodyColor" value="#d8c5a7"></label>
+   <div class="divider"></div>
+   <div class="section-label">ถ่ายรูป / เลือกรูปผ้า</div>
+   <input type="file" id="fabricFile" accept="image/*" capture="environment" class="text-input">
+   <canvas id="photoCanvas"></canvas>
+   <p class="hint">หลังเลือกรูป ให้แตะบริเวณสีผ้าบนภาพเพื่อเก็บสีตัวอย่าง แล้วกด “ใช้กับตัวกระเป๋า” หรือเลือกชิ้นส่วนก่อนเพื่อใช้กับชิ้นนั้น</p>
+   <button id="applyFabric" style="width:100%;margin-top:7px">ใช้สีผ้าที่เลือก</button>
+   <div class="divider"></div>
+   <div class="section-label">ชิ้นส่วนที่เลือก</div>
+   <div id="selectionInfo" class="empty">ยังไม่ได้เลือกชิ้นส่วน แตะชิ้นส่วนในพื้นที่ออกแบบเพื่อแก้ไข</div>
+   <div id="componentControls" style="display:none">
+    <h3 id="componentName">ชิ้นส่วน</h3>
+    <label class="field">กว้าง (ซม.) <input type="number" id="compW" min="1" max="100" step=".5"></label>
+    <label class="field">สูง (ซม.) <input type="number" id="compH" min="1" max="100" step=".5"></label>
+    <label class="field">ตำแหน่ง X (ซม.) <input type="number" id="compX" min="0" max="100" step=".5"></label>
+    <label class="field">ตำแหน่ง Y (ซม.) <input type="number" id="compY" min="0" max="100" step=".5"></label>
+    <label class="field">สีชิ้นส่วน <input type="color" id="compColor" value="#b98f65"></label>
+    <button id="centerComp" style="width:100%;margin-top:5px">จัดกึ่งกลางแนวนอน</button>
+   </div>
+   <div class="divider"></div>
+   <div class="section-label">สีผ้าที่บันทึก</div><div id="savedColors" class="color-row"></div>
+  </div>
+ </aside>
+</div>
+<div class="footer-note">ต้นแบบนี้ทำงานในเบราว์เซอร์และบันทึกแบบไว้ในอุปกรณ์ได้บางส่วน • ภาพมุมมองจำลองเป็นภาพประกอบ ไม่ใช่การจำลองผ้าทางฟิสิกส์ • แพทเทิร์นเป็นต้นแบบสำหรับตรวจสอบ ต้องทดลองเย็บและตรวจขนาดก่อนผลิตจริง</div>
+
+<div class="modal" id="patternModal"><div class="modal-card">
+ <div class="modal-head"><h2>แพทเทิร์นสำหรับพิมพ์ A4</h2><button id="closePattern">ปิด</button></div>
+ <p class="pattern-info" id="patternInfo"></p>
+ <div class="pattern-info">เลือก “พิมพ์ / บันทึกเป็น PDF” แล้วตั้งค่าการพิมพ์เป็นขนาดจริงหรือ 100% (ห้ามเลือก Fit to page) ตรวจสี่เหลี่ยมทดสอบ 5 × 5 ซม. ทุกครั้งก่อนตัดผ้า</div>
+ <div class="pattern-list" id="patternList"></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:15px"><button class="primary" id="printPattern">พิมพ์ / บันทึก PDF</button><button id="downloadPatternSvg">ดาวน์โหลดแพทเทิร์น SVG</button></div>
+ </div></div>
+<div id="toast" class="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+const state={shape:'tote',w:30,h:25,d:10,seam:1,bodyColor:'#d8c5a7',view:'front',items:[],selected:null,nextId:1,photoColor:null,photoData:null,savedColors:[]};
+const names={pocket:'กระเป๋าปะสี่เหลี่ยม',zipper:'ช่องซิปแนวนอน',roundPocket:'ช่องกระเป๋าทรงโค้ง',divider:'ช่องแบ่งด้านใน',strap:'สายกระเป๋า',band:'แถบตกแต่ง'};
+const defaults={pocket:{w:15,h:12,x:7.5,y:8,color:'#b98f65'},zipper:{w:18,h:3,x:6,y:5,color:'#8b9b72'},roundPocket:{w:15,h:10,x:7.5,y:9,color:'#8b9b72'},divider:{w:22,h:13,x:4,y:8,color:'#e4c4c7'},strap:{w:3,h:22,x:4,y:-19,color:'#8b6849'},band:{w:24,h:3,x:3,y:18,color:'#b96e58'}};
+const cmToPx=()=>Math.min(11,340/Math.max(state.w,state.h+5));
+function toast(s){$('toast').textContent=s;$('toast').style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('toast').style.display='none',2400)}
+function shapePath(x,y,w,h,shape){if(shape==='shoulder')return `M ${x+3} ${y} Q ${x+w/2} ${y-5} ${x+w-3} ${y} L ${x+w} ${y+h-8} Q ${x+w/2} ${y+h+7} ${x} ${y+h-8} Z`;if(shape==='drawstring')return `M ${x+4} ${y+10} Q ${x} ${y+3} ${x+5} ${y} L ${x+w-5} ${y} Q ${x+w} ${y+3} ${x+w-4} ${y+10} L ${x+w-1} ${y+h-4} Q ${x+w/2} ${y+h+2} ${x+1} ${y+h-4} Z`;return `M ${x} ${y} L ${x+w} ${y} L ${x+w} ${y+h} Q ${x+w/2} ${y+h+3} ${x} ${y+h} Z`}
+function getBagGeom(){let scale=cmToPx(),w=state.w*scale,h=state.h*scale,x=(500-w)/2,y=(520-h)/2+5;if(state.view==='back'){}return {scale,w,h,x,y}}
+function render(){const svg=$('designSvg'),g=getBagGeom();svg.innerHTML='';let ns='http://www.w3.org/2000/svg';function el(tag,attrs,parent=svg){let e=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));parent.appendChild(e);return e}
+el('rect',{x:0,y:0,width:500,height:520,fill:'transparent'});
+// shadow and bag
+el('ellipse',{cx:g.x+g.w/2,cy:g.y+g.h+18,rx:g.w*.55,ry:12,fill:'#000',opacity:.08});
+if(state.view==='mock3d'){
+ const depth=state.d*g.scale*.42;el('path',{d:`M ${g.x+g.w} ${g.y} L ${g.x+g.w+depth} ${g.y+depth*.55} L ${g.x+g.w+depth} ${g.y+g.h+depth*.4} L ${g.x+g.w} ${g.y+g.h} Z`,fill:shade(state.bodyColor,-18),stroke:'#554c40','stroke-width':1.2});
+ el('path',{d:`M ${g.x} ${g.y+g.h} L ${g.x+g.w} ${g.y+g.h} L ${g.x+g.w+depth} ${g.y+g.h+depth*.4} L ${g.x+depth} ${g.y+g.h+depth*.4} Z`,fill:shade(state.bodyColor,-10),stroke:'#554c40','stroke-width':1.2});
+}
+let by=g.y,bx=g.x;
+el('path',{d:shapePath(bx,by,g.w,g.h,state.shape),fill:state.bodyColor,stroke:'#635849','stroke-width':1.5});
+el('path',{d:`M ${bx+7} ${by+7} L ${bx+g.w-7} ${by+7} L ${bx+g.w-7} ${by+g.h-7} Q ${bx+g.w/2} ${by+g.h-1} ${bx+7} ${by+g.h-7} Z`,fill:'none',stroke:'#ffffffaa','stroke-width':1,'stroke-dasharray':'4 4'});
+if(state.shape!=='drawstring'){let loopW=g.w*.18,loopY=by-5;el('path',{d:`M ${bx+g.w*.22} ${by+4} C ${bx+g.w*.22} ${loopY-35},${bx+g.w*.36} ${loopY-35},${bx+g.w*.36} ${by+4}`,fill:'none',stroke:'#7c5c3d','stroke-width':Math.max(3,g.scale*.65),'stroke-linecap':'round'});el('path',{d:`M ${bx+g.w*.64} ${by+4} C ${bx+g.w*.64} ${loopY-35},${bx+g.w*.78} ${loopY-35},${bx+g.w*.78} ${by+4}`,fill:'none',stroke:'#7c5c3d','stroke-width':Math.max(3,g.scale*.65),'stroke-linecap':'round'});}
+if(state.view==='back'){el('text',{x:250,y:30,'text-anchor':'middle','font-size':12,fill:'#777'}).textContent='ด้านหลัง — ชิ้นส่วนด้านหน้าไม่แสดง';}
+state.items.forEach(it=>{if(state.view==='back'&&!it.back) return;let x=bx+it.x*g.scale,y=by+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale;let attrs={fill:it.color,stroke:it.id===state.selected?'#292720':'#756650','stroke-width':it.id===state.selected?2.5:1.2};if(it.type==='zipper'){el('rect',{x,y:y+h*.25,width:w,height:h*.5,rx:2,...attrs});el('line',{x1:x+3,y1:y+h/2,x2:x+w-3,y2:y+h/2,stroke:'#e8e2d6','stroke-width':1.5,'stroke-dasharray':'2 2'});el('rect',{x:x+w*.8,y:y+h*.35,width:w*.06,height:h*.3,fill:'#d9d5cc',stroke:'#5d5b56','stroke-width':.7});}
+else if(it.type==='roundPocket'){el('path',{d:`M ${x} ${y+5} Q ${x} ${y} ${x+5} ${y} L ${x+w-5} ${y} Q ${x+w} ${y} ${x+w} ${y+5} L ${x+w} ${y+h-8} Q ${x+w/2} ${y+h+8} ${x} ${y+h-8} Z`,...attrs});}
+else if(it.type==='strap'){el('rect',{x,y,width:w,height:h,rx:w/2,...attrs});}
+else{el('rect',{x,y,width:w,height:h,rx:it.type==='band'?2:3,...attrs});if(it.type==='pocket'||it.type==='divider')el('path',{d:`M ${x+3} ${y+4} L ${x+w-3} ${y+4}`,stroke:'#ffffffaa','stroke-width':1.2,fill:'none'});}
+if(it.id===state.selected){el('rect',{x:x-4,y:y-4,width:w+8,height:h+8,fill:'none',stroke:'#292720','stroke-dasharray':'4 3','stroke-width':1});el('circle',{cx:x+w,cy:y+h,r:4,fill:'#fff',stroke:'#292720','stroke-width':1.5});}
+});
+el('text',{x:250,y:495,'text-anchor':'middle','font-size':12,fill:'#777'}).textContent=`${state.w} × ${state.h} ซม. • ความลึก ${state.d} ซม.`;
+updateSelection();
+}
+function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return '#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1)}
+function addItem(type){let d=defaults[type],it={id:state.nextId++,type,name:names[type],...d};if(type==='strap'){it.x=1;it.y=-Math.max(12,state.h*.75);it.h=Math.max(15,state.h*.85)}if(type==='divider'){it.y=state.h*.25}state.items.push(it);state.selected=it.id;state.view='front';updateViewButtons();render();toast('เพิ่ม'+it.name+'แล้ว')}
+function selected(){return state.items.find(x=>x.id===state.selected)}
+function updateSelection(){let it=selected();$('selectionInfo').style.display=it?'none':'block';$('componentControls').style.display=it?'block':'none';if(!it)return;$('componentName').textContent=it.name;$('compW').value=it.w;$('compH').value=it.h;$('compX').value=it.x;$('compY').value=it.y;$('compColor').value=it.color;}
+function updateFromControls(){let it=selected();if(!it)return;it.w=Math.max(1,Number($('compW').value)||1);it.h=Math.max(1,Number($('compH').value)||1);it.x=Number($('compX').value)||0;it.y=Number($('compY').value)||0;it.color=$('compColor').value;render()}
+function applyBag(){state.w=clamp(Number($('bagW').value)||30,10,100);state.h=clamp(Number($('bagH').value)||25,10,100);state.d=clamp(Number($('bagD').value)||0,0,60);state.seam=clamp(Number($('seam').value)||0,0,3);$('bagW').value=state.w;$('bagH').value=state.h;$('bagD').value=state.d;state.items.forEach(it=>{if(it.x+it.w>state.w)it.x=Math.max(0,state.w-it.w);if(it.y+it.h>state.h)it.y=Math.max(0,state.h-it.h)});render();toast('อัปเดตขนาดแล้ว — ตรวจตำแหน่งชิ้นส่วนอีกครั้ง')}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function updateViewButtons(){[['frontView','front'],['backView','back'],['mock3d','mock3d']].forEach(([id,v])=>$(id).classList.toggle('active',state.view===v))}
+function save(){let data=JSON.stringify(state);try{localStorage.setItem('smartBagStudioProject',data);toast('บันทึกแบบไว้ในอุปกรณ์แล้ว')}catch(e){toast('บันทึกไม่สำเร็จ พื้นที่จัดเก็บอาจเต็ม')}}
+function load(){try{let s=localStorage.getItem('smartBagStudioProject');if(!s){toast('ยังไม่มีแบบที่บันทึกไว้');return}Object.assign(state,JSON.parse(s));syncInputs();render();toast('เปิดแบบล่าสุดแล้ว')}catch(e){toast('เปิดแบบไม่สำเร็จ')}}
+function syncInputs(){$('bagW').value=state.w;$('bagH').value=state.h;$('bagD').value=state.d;$('seam').value=state.seam;$('bodyColor').value=state.bodyColor;updateViewButtons()}
+function svgExport(){let clone=$('designSvg').cloneNode(true);clone.setAttribute('xmlns','http://www.w3.org/2000/svg');let blob=new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml'});downloadBlob(blob,'smart-bag-design.svg');}
+function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function generatePieces(){let pieces=[{name:'ตัวกระเป๋า (หน้า)',w:state.w,h:state.h,type:'rect'},{name:'ตัวกระเป๋า (หลัง)',w:state.w,h:state.h,type:'rect'}];if(state.d>0)pieces.push({name:'ก้นกระเป๋า (ต้นแบบ)',w:state.w,h:state.d,type:'rect'});if(state.d>0)pieces.push({name:'ข้างกระเป๋า (ตัด 2)',w:state.d,h:state.h,type:'rect'});state.items.forEach(it=>{if(it.type==='strap')pieces.push({name:it.name+' (ต้นแบบ)',w:it.w,h:it.h,type:'rect'});else pieces.push({name:it.name,w:it.w,h:it.h,type:it.type==='roundPocket'?'round':'rect'});});return pieces}
+function makePieceSvg(p,preview=false){let seam=state.seam*10,w=p.w*10,h=p.h*10,outerW=w+2*seam,outerH=h+2*seam,ns='http://www.w3.org/2000/svg';let s=`<svg xmlns="${ns}" viewBox="0 0 ${outerW+10} ${outerH+10}" width="${outerW+10}mm" height="${outerH+10}mm"><rect x="5" y="5" width="${outerW}" height="${outerH}" fill="none" stroke="#222" stroke-width=".35"/>`;if(p.type==='round')s+=`<path d="M ${5+seam} ${5+seam} L ${5+seam+w} ${5+seam} L ${5+seam+w} ${5+seam+h-8} Q ${5+seam+w/2} ${5+seam+h+8} ${5+seam} ${5+seam+h-8} Z" fill="none" stroke="#777" stroke-dasharray="2 1" stroke-width=".25"/>`;else s+=`<rect x="${5+seam}" y="${5+seam}" width="${w}" height="${h}" fill="none" stroke="#777" stroke-dasharray="2 1" stroke-width=".25"/>`;s+=`<text x="${(outerW+10)/2}" y="${outerH+2}" text-anchor="middle" font-size="2.5" fill="#333">${escapeXml(p.name)}</text></svg>`;return s}
+function escapeXml(s){return s.replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]))}
+let patternPieces=[];
+function showPattern(){patternPieces=generatePieces();$('patternInfo').textContent=`ขนาดหลัก ${state.w} × ${state.h} ซม. • เผื่อตะเข็บ ${state.seam} ซม. • ${patternPieces.length} รายการชิ้นส่วน ตัวอย่างนี้เป็นแพทเทิร์นเรขาคณิตเบื้องต้น ไม่ใช่แบบผลิตที่ผ่านการทดสอบ`;
+$('patternList').innerHTML='';patternPieces.forEach(p=>{let div=document.createElement('div');div.className='pattern-piece';div.innerHTML=`<h4>${escapeHtml(p.name)}</h4>${makePieceSvg(p)}<p>ขนาดสำเร็จ ${p.w} × ${p.h} ซม. · เผื่อตะเข็บรอบ ${state.seam} ซม.</p>`;$('patternList').appendChild(div)});$('patternModal').classList.add('open')}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function printPatterns(){let pages='';patternPieces.forEach(p=>{let sw=p.w*10+state.seam*20+10,sh=p.h*10+state.seam*20+10;let cols=Math.max(1,Math.ceil(sw/190)),rows=Math.max(1,Math.ceil(sh/277));for(let ry=0;ry<rows;ry++)for(let cx=0;cx<cols;cx++){let x=cx*190,y=ry*277;let s=`<svg xmlns="http://www.w3.org/2000/svg" width="190mm" height="277mm" viewBox="${x} ${y} 190 277"><rect x="${x+5}" y="${y+5}" width="${sw}" height="${sh}" fill="none" stroke="#222" stroke-width=".4"/>`;let seam=state.seam*10,w=p.w*10,h=p.h*10;s+=`<rect x="${x+5+seam}" y="${y+5+seam}" width="${w}" height="${h}" fill="none" stroke="#777" stroke-dasharray="2 1" stroke-width=".3"/>`;s+=`<text x="${x+8}" y="${y+13}" font-size="3.5">${escapeXml(p.name)} — หน้า ${cx+1}/${cols}, ${ry+1}/${rows}</text>`;s+=`<path d="M ${x+2} ${y+2} h 6 M ${x+5} ${y-1} v 6 M ${x+184} ${y+2} h 6 M ${x+187} ${y-1} v 6" stroke="#222" stroke-width=".3"/>`;s+=`<text x="${x+10}" y="${y+270}" font-size="3">พิมพ์ 100% • ทดสอบสเกล 5 × 5 ซม. ก่อนตัด</text></svg>`;pages+=`<section class="sheet">${s}</section>`}});let win=window.open('','_blank');if(!win){toast('เบราว์เซอร์บล็อกหน้าพิมพ์ กรุณาอนุญาตป๊อปอัป');return}win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Bag Pattern</title><style>@page{size:A4;margin:10mm}body{margin:0;font-family:Arial,sans-serif}.sheet{width:190mm;height:277mm;page-break-after:always;overflow:hidden}.sheet svg{display:block;width:190mm;height:277mm}@media screen{body{background:#ddd}.sheet{background:white;margin:10px auto;box-shadow:0 1px 6px #999}}</style></head><body>${pages}<script>window.onload=()=>setTimeout(()=>window.print(),500)<\/script></body></html>`);win.document.close()}
+function downloadPattern(){let all=patternPieces.map(p=>makePieceSvg(p)).join('\n');downloadBlob(new Blob([all],{type:'image/svg+xml'}),'smart-bag-pattern-pieces.svg')}
+function applyColor(color){if(state.selected){let it=selected();if(it)it.color=color}else state.bodyColor=color;$('bodyColor').value=state.bodyColor;render()}
+function setupPhoto(){let file=$('fabricFile').files[0];if(!file)return;let url=URL.createObjectURL(file),img=new Image();img.onload=()=>{let c=$('photoCanvas'),maxW=500,scale=Math.min(1,maxW/img.width);c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);c.style.display='block';state.photoData=c.toDataURL('image/jpeg',.8);toast('แตะบริเวณสีผ้าบนรูปเพื่อเลือกสี')};img.src=url}
+$('photoCanvas').addEventListener('click',e=>{let c=$('photoCanvas'),r=c.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)*c.width/r.width),y=Math.floor((e.clientY-r.top)*c.height/r.height),d=c.getContext('2d').getImageData(x,y,1,1).data,color='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');state.photoColor=color;state.savedColors.unshift(color);state.savedColors=[...new Set(state.savedColors)].slice(0,12);renderSavedColors();toast('เลือกสี '+color+' แล้ว กด “ใช้สีผ้าที่เลือก”')});
+function renderSavedColors(){$('savedColors').innerHTML='';state.savedColors.forEach(c=>{let b=document.createElement('button');b.className='swatch';b.style.background=c;b.title=c;b.onclick=()=>{state.photoColor=c;applyColor(c)};$('savedColors').appendChild(b)})}
+$('fabricFile').addEventListener('change',setupPhoto);$('applyFabric').onclick=()=>{if(!state.photoColor){toast('กรุณาเลือกรูปผ้าแล้วแตะเลือกสีบนภาพก่อน');return}applyColor(state.photoColor);toast('นำสีไปใช้แล้ว')};
+$('bodySwatches').addEventListener('click',e=>{let b=e.target.closest('[data-color]');if(!b)return;state.bodyColor=b.dataset.color;$('bodyColor').value=state.bodyColor;document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('chosen'));b.classList.add('chosen');render()});
+$('bodyColor').addEventListener('input',e=>{state.bodyColor=e.target.value;render()});
+$('applyBag').onclick=applyBag;['bagW','bagH','bagD','seam'].forEach(id=>$(id).addEventListener('change',applyBag));
+document.querySelectorAll('[data-shape]').forEach(b=>b.onclick=()=>{state.shape=b.dataset.shape;document.querySelectorAll('[data-shape]').forEach(x=>x.classList.toggle('active',x===b));render()});
+document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addItem(b.dataset.add));
+['compW','compH','compX','compY','compColor'].forEach(id=>$(id).addEventListener('change',updateFromControls));
+$('centerComp').onclick=()=>{let it=selected();if(it){it.x=(state.w-it.w)/2;$('compX').value=it.x;render()}};
+$('deleteBtn').onclick=()=>{if(!state.selected){toast('เลือกชิ้นส่วนก่อน');return}state.items=state.items.filter(i=>i.id!==state.selected);state.selected=null;render();toast('ลบชิ้นส่วนแล้ว')};
+$('resetBtn').onclick=()=>{if(confirm('เริ่มแบบใหม่? การเปลี่ยนแปลงที่ยังไม่บันทึกจะหายไป')){state.items=[];state.selected=null;state.nextId=1;state.w=30;state.h=25;state.d=10;state.seam=1;state.bodyColor='#d8c5a7';state.shape='tote';state.view='front';syncInputs();render()}};
+$('saveBtn').onclick=save;$('loadBtn').onclick=load;$('exportSvgBtn').onclick=svgExport;$('patternBtn').onclick=showPattern;$('closePattern').onclick=()=>$('patternModal').classList.remove('open');$('printPattern').onclick=printPatterns;$('downloadPatternSvg').onclick=downloadPattern;
+$('frontView').onclick=()=>{state.view='front';updateViewButtons();render()};$('backView').onclick=()=>{state.view='back';updateViewButtons();render()};$('mock3d').onclick=()=>{state.view='mock3d';updateViewButtons();render()};
+let drag=null;const svg=$('designSvg');
+svg.addEventListener('pointerdown',e=>{let pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;let p=pt.matrixTransform(svg.getScreenCTM().inverse());let g=getBagGeom();let hit=null;for(let i=state.items.length-1;i>=0;i--){let it=state.items[i],x=g.x+it.x*g.scale,y=g.y+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale;if(p.x>=x-5&&p.x<=x+w+5&&p.y>=y-5&&p.y<=y+h+5){hit=it;break}}if(hit){state.selected=hit.id;drag={id:hit.id,x:p.x,y:p.y,ix:hit.x,iy:hit.y,scale:g.scale};svg.setPointerCapture(e.pointerId);render()}});
+svg.addEventListener('pointermove',e=>{if(!drag)return;let pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;let p=pt.matrixTransform(svg.getScreenCTM().inverse()),it=state.items.find(i=>i.id===drag.id);if(!it)return;it.x=Math.round((drag.ix+(p.x-drag.x)/drag.scale)*2)/2;it.y=Math.round((drag.iy+(p.y-drag.y)/drag.scale)*2)/2;$('compX').value=it.x;$('compY').value=it.y;render()});
+svg.addEventListener('pointerup',()=>{drag=null});
+function clampItems(){state.items.forEach(it=>{it.x=clamp(it.x,0,Math.max(0,state.w-it.w));it.y=clamp(it.y,-Math.max(0,it.h-state.h),Math.max(0,state.h-it.h))})}
+$('compX').addEventListener('change',()=>{let it=selected();if(it){it.x=Number($('compX').value)||0;render()}});$('compY').addEventListener('change',()=>{let it=selected();if(it){it.y=Number($('compY').value)||0;render()}});
+function init(){syncInputs();render();renderSavedColors()}
+init();
+</script>
+</body></html>
