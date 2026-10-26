@@ -22,6 +22,13 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
 .color-row{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.swatch{width:27px;height:27px;border-radius:8px;border:2px solid white;box-shadow:0 0 0 1px #d8d0c4;cursor:pointer}.swatch.chosen{box-shadow:0 0 0 2px var(--ink)}
 .library-item{display:flex;align-items:center;gap:9px;padding:10px 9px;border:1px solid var(--line);border-radius:11px;margin:7px 0;background:#fff}.library-item .mini{width:42px;height:34px;border:1px solid #d8cdbc;border-radius:6px;display:grid;place-items:center;background:#f4eee4;font-size:19px}.library-item div:nth-child(2){flex:1;min-width:0}.library-item b{font-size:12px;display:block}.library-item small{font-size:10px;color:var(--muted)}.library-item button{padding:7px 9px;font-size:11px}
 #photoCanvas{width:100%;max-height:150px;object-fit:contain;background:#f6f0e6;border-radius:10px;margin-top:8px;display:none;touch-action:manipulation}
+.file-input{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.upload-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:17px 12px;border:1.5px dashed #cdbda8;border-radius:12px;background:#fbf7ef;cursor:pointer;text-align:center;min-height:100px}
+.upload-zone:hover,.upload-zone:focus-within{border-color:var(--accent);background:#f5ecdf}
+.upload-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:var(--ink);color:#fff;font-size:22px;line-height:1}
+.upload-zone strong{font-size:13px}.upload-zone small{font-size:11px;color:var(--muted)}
+.upload-zone.dragover{background:#eee0cb;border-color:var(--accent);border-style:solid}
+
 .footer-note{max-width:1550px;margin:0 auto 20px;padding:0 18px;color:var(--muted);font-size:11px;line-height:1.6}
 .modal{position:fixed;inset:0;background:#24221dbb;z-index:20;display:none;align-items:center;justify-content:center;padding:12px}.modal.open{display:flex}.modal-card{background:var(--panel);border-radius:16px;max-width:1000px;width:100%;max-height:92vh;overflow:auto;padding:18px}.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.modal-head h2{font-size:18px;margin:0}.pattern-info{font-size:12px;color:var(--muted);line-height:1.6}.pattern-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:15px}.pattern-piece{border:1px solid var(--line);padding:10px;border-radius:12px;background:white}.pattern-piece h4{font-size:12px;margin:0 0 8px}.pattern-piece svg{width:100%;height:150px;border:1px dashed #ddd;background:#fff}.pattern-piece p{font-size:11px;color:var(--muted);margin:7px 0 0}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282720;color:white;padding:11px 15px;border-radius:12px;z-index:50;font-size:13px;box-shadow:0 4px 20px #0002;display:none;max-width:90vw}
@@ -85,9 +92,15 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
    <label class="field">เลือกสีเอง <input type="color" id="bodyColor" value="#d8c5a7"></label>
    <div class="divider"></div>
    <div class="section-label">ถ่ายรูป / เลือกรูปผ้า</div>
-   <input type="file" id="fabricFile" accept="image/*" capture="environment" class="text-input">
-   <canvas id="photoCanvas"></canvas>
-   <p class="hint">หลังเลือกรูป ให้แตะบริเวณสีผ้าบนภาพเพื่อเก็บสีตัวอย่าง แล้วกด “ใช้กับตัวกระเป๋า” หรือเลือกชิ้นส่วนก่อนเพื่อใช้กับชิ้นนั้น</p>
+   <label class="upload-zone" id="uploadZone" for="fabricFile">
+    <span class="upload-icon">＋</span>
+    <strong id="uploadTitle">เลือกรูปผ้า หรือถ่ายรูป</strong>
+    <small id="uploadHint">แตะที่นี่เพื่อเปิดรูปภาพจากอุปกรณ์</small>
+   </label>
+   <input type="file" id="fabricFile" accept="image/*" class="file-input" aria-label="เลือกรูปผ้า">
+   <canvas id="photoCanvas" title="แตะบริเวณสีผ้าที่ต้องการเลือก"></canvas>
+   <p id="photoStatus" class="hint">เมื่อรูปแสดงแล้ว ให้แตะบริเวณสีผ้าบนรูปเพื่อเก็บสีตัวอย่าง แล้วกด “ใช้สีผ้าที่เลือก”</p>
+   <p class="hint">รองรับ JPG, PNG, WEBP และรูปภาพจากกล้อง</p>
    <button id="applyFabric" style="width:100%;margin-top:7px">ใช้สีผ้าที่เลือก</button>
    <div class="divider"></div>
    <div class="section-label">ชิ้นส่วนที่เลือก</div>
@@ -170,10 +183,49 @@ function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','
 function printPatterns(){let pages='';patternPieces.forEach(p=>{let sw=p.w*10+state.seam*20+10,sh=p.h*10+state.seam*20+10;let cols=Math.max(1,Math.ceil(sw/190)),rows=Math.max(1,Math.ceil(sh/277));for(let ry=0;ry<rows;ry++)for(let cx=0;cx<cols;cx++){let x=cx*190,y=ry*277;let s=`<svg xmlns="http://www.w3.org/2000/svg" width="190mm" height="277mm" viewBox="${x} ${y} 190 277"><rect x="${x+5}" y="${y+5}" width="${sw}" height="${sh}" fill="none" stroke="#222" stroke-width=".4"/>`;let seam=state.seam*10,w=p.w*10,h=p.h*10;s+=`<rect x="${x+5+seam}" y="${y+5+seam}" width="${w}" height="${h}" fill="none" stroke="#777" stroke-dasharray="2 1" stroke-width=".3"/>`;s+=`<text x="${x+8}" y="${y+13}" font-size="3.5">${escapeXml(p.name)} — หน้า ${cx+1}/${cols}, ${ry+1}/${rows}</text>`;s+=`<path d="M ${x+2} ${y+2} h 6 M ${x+5} ${y-1} v 6 M ${x+184} ${y+2} h 6 M ${x+187} ${y-1} v 6" stroke="#222" stroke-width=".3"/>`;s+=`<text x="${x+10}" y="${y+270}" font-size="3">พิมพ์ 100% • ทดสอบสเกล 5 × 5 ซม. ก่อนตัด</text></svg>`;pages+=`<section class="sheet">${s}</section>`}});let win=window.open('','_blank');if(!win){toast('เบราว์เซอร์บล็อกหน้าพิมพ์ กรุณาอนุญาตป๊อปอัป');return}win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Bag Pattern</title><style>@page{size:A4;margin:10mm}body{margin:0;font-family:Arial,sans-serif}.sheet{width:190mm;height:277mm;page-break-after:always;overflow:hidden}.sheet svg{display:block;width:190mm;height:277mm}@media screen{body{background:#ddd}.sheet{background:white;margin:10px auto;box-shadow:0 1px 6px #999}}</style></head><body>${pages}<script>window.onload=()=>setTimeout(()=>window.print(),500)<\/script></body></html>`);win.document.close()}
 function downloadPattern(){let all=patternPieces.map(p=>makePieceSvg(p)).join('\n');downloadBlob(new Blob([all],{type:'image/svg+xml'}),'smart-bag-pattern-pieces.svg')}
 function applyColor(color){if(state.selected){let it=selected();if(it)it.color=color}else state.bodyColor=color;$('bodyColor').value=state.bodyColor;render()}
-function setupPhoto(){let file=$('fabricFile').files[0];if(!file)return;let url=URL.createObjectURL(file),img=new Image();img.onload=()=>{let c=$('photoCanvas'),maxW=500,scale=Math.min(1,maxW/img.width);c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);c.style.display='block';state.photoData=c.toDataURL('image/jpeg',.8);toast('แตะบริเวณสีผ้าบนรูปเพื่อเลือกสี')};img.src=url}
-$('photoCanvas').addEventListener('click',e=>{let c=$('photoCanvas'),r=c.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)*c.width/r.width),y=Math.floor((e.clientY-r.top)*c.height/r.height),d=c.getContext('2d').getImageData(x,y,1,1).data,color='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');state.photoColor=color;state.savedColors.unshift(color);state.savedColors=[...new Set(state.savedColors)].slice(0,12);renderSavedColors();toast('เลือกสี '+color+' แล้ว กด “ใช้สีผ้าที่เลือก”')});
+function setupPhoto(fileOverride){
+ const input=$('fabricFile'),file=fileOverride||(input.files&&input.files[0]);
+ if(!file){return}
+ if(!file.type||!file.type.startsWith('image/')){toast('ไฟล์นี้ไม่ใช่รูปภาพ กรุณาเลือก JPG, PNG หรือ WEBP');return}
+ $('uploadTitle').textContent='กำลังเปิดรูปผ้า…';
+ $('uploadHint').textContent=file.name||'รูปจากอุปกรณ์';
+ $('photoStatus').textContent='กำลังประมวลผลรูปภาพ';
+ const reader=new FileReader();
+ reader.onerror=()=>{ $('uploadTitle').textContent='เลือกรูปผ้า หรือถ่ายรูป';$('photoStatus').textContent='เปิดรูปไม่สำเร็จ ลองเลือกรูปอื่นอีกครั้ง';toast('อ่านไฟล์รูปไม่สำเร็จ กรุณาลองใหม่') };
+ reader.onload=()=>{
+  const img=new Image();
+  img.onerror=()=>{ $('uploadTitle').textContent='เลือกรูปผ้า หรือถ่ายรูป';$('photoStatus').textContent='ไฟล์รูปนี้เปิดไม่ได้ กรุณาเลือกรูป JPG หรือ PNG';toast('เปิดรูปภาพไม่ได้ กรุณาลองรูปอื่น') };
+  img.onload=()=>{
+   try{
+    const c=$('photoCanvas'),maxW=900,scale=Math.min(1,maxW/img.width);
+    c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));
+    const ctx=c.getContext('2d',{willReadFrequently:true});ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);
+    c.style.display='block';state.photoData=c.toDataURL('image/jpeg',.85);state.photoColor=null;
+    $('uploadTitle').textContent='เปลี่ยนรูปผ้า';$('uploadHint').textContent=file.name||'เลือกรูปสำเร็จ';
+    $('photoStatus').textContent='รูปพร้อมแล้ว — แตะจุดสีผ้าที่ต้องการบนรูป จากนั้นกด “ใช้สีผ้าที่เลือก”';
+    toast('เปิดรูปผ้าสำเร็จ แตะบนรูปเพื่อเลือกสี');
+   }catch(err){$('photoStatus').textContent='ไม่สามารถอ่านรูปนี้ได้ กรุณาเลือกรูปอื่น';toast('เกิดข้อผิดพลาดกับไฟล์รูป')}
+  };
+  img.src=reader.result;
+ };
+ reader.readAsDataURL(file);
+}
+function sampleFabricColor(e){
+ const c=$('photoCanvas');if(!c.width||!c.height)return;
+ const r=c.getBoundingClientRect(),clientX=e.clientX??(e.touches&&e.touches[0].clientX),clientY=e.clientY??(e.touches&&e.touches[0].clientY);
+ const x=Math.max(0,Math.min(c.width-1,Math.floor((clientX-r.left)*c.width/r.width))),y=Math.max(0,Math.min(c.height-1,Math.floor((clientY-r.top)*c.height/r.height)));
+ try{const d=c.getContext('2d',{willReadFrequently:true}).getImageData(x,y,1,1).data,color='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+ state.photoColor=color;state.savedColors.unshift(color);state.savedColors=[...new Set(state.savedColors)].slice(0,12);renderSavedColors();$('photoStatus').textContent='สีที่เลือก: '+color+' — กด “ใช้สีผ้าที่เลือก” เพื่อนำไปใช้';toast('เลือกสี '+color+' แล้ว');
+ }catch(err){toast('อ่านสีจากรูปไม่ได้ กรุณาลองเลือกรูปอื่น')}
+}
+$('photoCanvas').addEventListener('click',sampleFabricColor);
+$('photoCanvas').addEventListener('touchend',e=>{if(e.changedTouches&&e.changedTouches.length){sampleFabricColor({clientX:e.changedTouches[0].clientX,clientY:e.changedTouches[0].clientY})}},{passive:true});
 function renderSavedColors(){$('savedColors').innerHTML='';state.savedColors.forEach(c=>{let b=document.createElement('button');b.className='swatch';b.style.background=c;b.title=c;b.onclick=()=>{state.photoColor=c;applyColor(c)};$('savedColors').appendChild(b)})}
-$('fabricFile').addEventListener('change',setupPhoto);$('applyFabric').onclick=()=>{if(!state.photoColor){toast('กรุณาเลือกรูปผ้าแล้วแตะเลือกสีบนภาพก่อน');return}applyColor(state.photoColor);toast('นำสีไปใช้แล้ว')};
+$('fabricFile').addEventListener('change',e=>{setupPhoto(e.target.files&&e.target.files[0])});
+$('uploadZone').addEventListener('dragover',e=>{e.preventDefault();$('uploadZone').classList.add('dragover')});
+$('uploadZone').addEventListener('dragleave',()=> $('uploadZone').classList.remove('dragover'));
+$('uploadZone').addEventListener('drop',e=>{e.preventDefault();$('uploadZone').classList.remove('dragover');const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)setupPhoto(f)});
+$('applyFabric').onclick=()=>{if(!state.photoColor){toast('กรุณาเลือกรูปผ้าแล้วแตะเลือกสีบนภาพก่อน');return}applyColor(state.photoColor);toast('นำสีไปใช้แล้ว')};
 $('bodySwatches').addEventListener('click',e=>{let b=e.target.closest('[data-color]');if(!b)return;state.bodyColor=b.dataset.color;$('bodyColor').value=state.bodyColor;document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('chosen'));b.classList.add('chosen');render()});
 $('bodyColor').addEventListener('input',e=>{state.bodyColor=e.target.value;render()});
 $('applyBag').onclick=applyBag;['bagW','bagH','bagD','seam'].forEach(id=>$(id).addEventListener('change',applyBag));
