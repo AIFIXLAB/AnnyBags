@@ -17,7 +17,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.preset{padding:11px 8px;text-align:center;font-size:12px;min-height:72px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px}.preset .icon{font-size:23px}.hint{font-size:11px;color:var(--muted);line-height:1.5}.divider{height:1px;background:var(--line);margin:13px 0}
 .workspace{display:flex;flex-direction:column;min-height:650px}.workspace-head{padding:13px 15px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.workspace-head strong{font-size:14px}.view-actions{display:flex;gap:6px}.view-actions button{font-size:12px;padding:8px 10px}
 .stage{position:relative;flex:1;min-height:470px;display:grid;place-items:center;overflow:hidden;background-color:#f5f0e7;background-image:radial-gradient(#ded5c7 .8px,transparent .8px);background-size:17px 17px;padding:15px}
-#designSvg{width:100%;height:100%;max-height:670px;min-height:430px;touch-action:none;overflow:visible}.stage-note{position:absolute;bottom:10px;left:12px;background:#fffdf0dd;padding:7px 9px;border-radius:8px;font-size:11px;color:var(--muted);pointer-events:none}
+#designSvg{touch-action:pan-y;-webkit-tap-highlight-color:transparent;width:100%;height:100%;max-height:670px;min-height:430px;touch-action:none;overflow:visible}.stage-note{position:absolute;bottom:10px;left:12px;background:#fffdf0dd;padding:7px 9px;border-radius:8px;font-size:11px;color:var(--muted);pointer-events:none}
 .bottom-strip{padding:12px 15px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.status{font-size:12px;color:var(--muted)}.props{padding:0 14px 15px}.props h3{font-size:13px;margin:12px 0}.empty{padding:12px;background:#f8f3ea;border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6}
 .color-row{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.swatch{width:27px;height:27px;border-radius:8px;border:2px solid white;box-shadow:0 0 0 1px #d8d0c4;cursor:pointer}.swatch.chosen{box-shadow:0 0 0 2px var(--ink)}
 .library-item{display:flex;align-items:center;gap:9px;padding:10px 9px;border:1px solid var(--line);border-radius:11px;margin:7px 0;background:#fff}.library-item .mini{width:42px;height:34px;border:1px solid #d8cdbc;border-radius:6px;display:grid;place-items:center;background:#f4eee4;font-size:19px}.library-item div:nth-child(2){flex:1;min-width:0}.library-item b{font-size:12px;display:block}.library-item small{font-size:10px;color:var(--muted)}.library-item button{padding:7px 9px;font-size:11px}
@@ -32,7 +32,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
 .footer-note{max-width:1550px;margin:0 auto 20px;padding:0 18px;color:var(--muted);font-size:11px;line-height:1.6}
 .modal{position:fixed;inset:0;background:#24221dbb;z-index:20;display:none;align-items:center;justify-content:center;padding:12px}.modal.open{display:flex}.modal-card{background:var(--panel);border-radius:16px;max-width:1000px;width:100%;max-height:92vh;overflow:auto;padding:18px}.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.modal-head h2{font-size:18px;margin:0}.pattern-info{font-size:12px;color:var(--muted);line-height:1.6}.pattern-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:15px}.pattern-piece{border:1px solid var(--line);padding:10px;border-radius:12px;background:white}.pattern-piece h4{font-size:12px;margin:0 0 8px}.pattern-piece svg{width:100%;height:150px;border:1px dashed #ddd;background:#fff}.pattern-piece p{font-size:11px;color:var(--muted);margin:7px 0 0}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282720;color:white;padding:11px 15px;border-radius:12px;z-index:50;font-size:13px;box-shadow:0 4px 20px #0002;display:none;max-width:90vw}
-.draw-mode #designSvg{cursor:crosshair}
+body.draw-mode #designSvg{touch-action:pan-y;-webkit-tap-highlight-color:transparent;cursor:crosshair;touch-action:none; -webkit-user-select:none;user-select:none}
+#designSvg{touch-action:pan-y;-webkit-tap-highlight-color:transparent;touch-action:pan-y; -webkit-tap-highlight-color:transparent}
+.draw-tools{display:grid;grid-template-columns:1fr 1fr;gap:6px}.draw-tools button{font-size:12px;padding:10px 5px}.draw-tools button.active{background:#292720;color:#fff;border-color:#292720}.draw-measure{padding:9px 10px;margin-top:7px;border-radius:8px;background:#f5efe5;font-size:12px;color:#554735;font-weight:600;font-variant-numeric:tabular-nums}
 .rotate-handle{cursor:grab;touch-action:none}
 .custom-list-title{font-size:11px;color:var(--muted);margin:12px 0 6px;font-weight:700}
 .custom-library-row{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:9px;padding:7px;margin-top:6px;background:white}
@@ -79,8 +81,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
    <p class="hint">นี่คือคลังต้นแบบเริ่มต้น สามารถเพิ่มรายการใหม่ได้เอง</p>
    <div class="divider"></div>
    <div class="section-label">ชิ้นส่วนกำหนดเอง (Custom)</div>
-   <button id="drawCustomBtn" class="primary" style="width:100%">✎ เริ่มวาดชิ้นส่วนเอง</button>
-   <p class="hint" id="drawHint">กดเริ่มวาด แล้วลากบนตัวกระเป๋าเพื่อวาดรูปทรงชิ้นส่วน</p>
+   <div class="draw-tools"><button id="drawCustomBtn" class="primary">✎ เส้นอิสระ</button><button id="drawStraightBtn">⌁ เส้นตรงเป็นจุด</button></div>
+   <button id="finishDrawBtn" style="width:100%;margin-top:6px" disabled>✓ จบการวาดชิ้นส่วน</button>
+   <p class="hint" id="drawHint">บน iPad: เลือกโหมด แล้วแตะจุดบนผ้าใบ สำหรับเส้นตรงให้แตะทีละจุด</p>
+   <div class="draw-measure" id="drawMeasure">ขนาดชิ้นงาน: —</div>
    <label class="field">ชื่อชิ้นส่วน <input id="customName" type="text" maxlength="32" placeholder="เช่น ช่องใส่มือถือ"></label>
    <button id="saveCustomBtn" style="width:100%">＋ เพิ่มชิ้นที่เลือกเข้าคลัง</button>
    <div id="customLibrary"></div>
@@ -146,7 +150,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:15p
 <div id="toast" class="toast"></div>
 <script>
 const $=id=>document.getElementById(id);
-const state={shape:'tote',w:30,h:25,d:10,seam:1,bodyColor:'#d8c5a7',view:'front',items:[],selected:null,nextId:1,photoColor:null,photoData:null,savedColors:[],drawMode:false,drawPoints:[],customLibrary:[]};
+const state={shape:'tote',w:30,h:25,d:10,seam:1,bodyColor:'#d8c5a7',view:'front',items:[],selected:null,nextId:1,photoColor:null,photoData:null,savedColors:[],drawMode:false,drawType:'freehand',drawPoints:[],drawCursor:null,customLibrary:[]};
 const names={pocket:'กระเป๋าปะสี่เหลี่ยม',zipper:'ช่องซิปแนวนอน',roundPocket:'ช่องกระเป๋าทรงโค้ง',divider:'ช่องแบ่งด้านใน',strap:'สายกระเป๋า',band:'แถบตกแต่ง'};
 const defaults={pocket:{w:15,h:12,x:7.5,y:8,color:'#b98f65'},zipper:{w:18,h:3,x:6,y:5,color:'#8b9b72'},roundPocket:{w:15,h:10,x:7.5,y:9,color:'#8b9b72'},divider:{w:22,h:13,x:4,y:8,color:'#e4c4c7'},strap:{w:3,h:22,x:4,y:-19,color:'#8b6849'},band:{w:24,h:3,x:3,y:18,color:'#b96e58'}};
 const cmToPx=()=>Math.min(11,340/Math.max(state.w,state.h+5));
@@ -182,7 +186,16 @@ if(it.id===state.selected){
 }
 });
 el('text',{x:250,y:495,'text-anchor':'middle','font-size':12,fill:'#777'}).textContent=`${state.w} × ${state.h} ซม. • ความลึก ${state.d} ซม.`;
-if(state.drawMode&&state.drawPoints.length){const pts=state.drawPoints.map(p=>`${p.x} ${p.y}`).join(' ');el('polyline',{points:pts,fill:'#c7aa8366',stroke:'#282720','stroke-width':2,'stroke-dasharray':'5 3'});}
+if(state.drawMode&&state.drawPoints.length){
+ const all=state.drawCursor?[...state.drawPoints,state.drawCursor]:state.drawPoints;
+ const pts=all.map(p=>`${p.x} ${p.y}`).join(' ');
+ el('polyline',{points:pts,fill:state.drawType==='straight'?'none':'#c7aa8366',stroke:'#282720','stroke-width':2,'stroke-dasharray':'5 3','stroke-linejoin':'round'});
+ state.drawPoints.forEach(p=>el('circle',{cx:p.x,cy:p.y,r:3,fill:'#fff',stroke:'#292720','stroke-width':1.5}));
+ if(state.drawType==='straight'&&all.length>=2){for(let i=1;i<all.length;i++){let a=all[i-1],b=all[i],len=Math.hypot(b.x-a.x,b.y-a.y)/g.scale,mx=(a.x+b.x)/2,my=(a.y+b.y)/2;let t=el('text',{x:mx,y:my-5,fill:'#292720','font-size':9,'font-weight':700,'text-anchor':'middle'});t.textContent=len.toFixed(1)+' cm';}}
+ const minX=Math.min(...all.map(p=>p.x)),maxX=Math.max(...all.map(p=>p.x)),minY=Math.min(...all.map(p=>p.y)),maxY=Math.max(...all.map(p=>p.y));
+ const total=all.length>1?all.slice(1).reduce((s,p,i)=>s+Math.hypot(p.x-all[i].x,p.y-all[i].y),0)/g.scale:0;
+ const m=$('drawMeasure');if(m)m.textContent=`กว้าง ${((maxX-minX)/g.scale).toFixed(1)} ซม. × สูง ${((maxY-minY)/g.scale).toFixed(1)} ซม. · ความยาวเส้น ${total.toFixed(1)} ซม.`;
+} else {const m=$('drawMeasure');if(m)m.textContent='ขนาดชิ้นงาน: —';}
 updateSelection();
 }
 function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return '#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1)}
@@ -263,42 +276,40 @@ $('resetBtn').onclick=()=>{if(confirm('เริ่มแบบใหม่? ก
 $('saveBtn').onclick=save;$('loadBtn').onclick=load;$('exportSvgBtn').onclick=svgExport;$('patternBtn').onclick=showPattern;$('closePattern').onclick=()=>$('patternModal').classList.remove('open');$('printPattern').onclick=printPatterns;$('downloadPatternSvg').onclick=downloadPattern;
 $('frontView').onclick=()=>{state.view='front';updateViewButtons();render()};$('backView').onclick=()=>{state.view='back';updateViewButtons();render()};$('mock3d').onclick=()=>{state.view='mock3d';updateViewButtons();render()};
 let drag=null,rotateDrag=null,drawActive=false;const svg=$('designSvg');
-function svgPoint(e){let pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse())}
+function svgPoint(e){
+ const r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal;
+ return {x:(e.clientX-r.left)*vb.width/r.width+vb.x,y:(e.clientY-r.top)*vb.height/r.height+vb.y};
+}
 svg.addEventListener('pointerdown',e=>{
- let p=svgPoint(e),g=getBagGeom();
+ const p=svgPoint(e),g=getBagGeom();
  if(state.drawMode){
-  drawActive=true;state.drawPoints=[{x:p.x,y:p.y}];svg.setPointerCapture(e.pointerId);render();return;
+  e.preventDefault();
+  if(state.drawType==='straight'){state.drawPoints.push(p);state.drawCursor=p;updateDrawControls();return;}
+  drawActive=true;state.drawPoints=[p];state.drawCursor=p;
+  try{svg.setPointerCapture(e.pointerId)}catch(err){}
+  render();return;
  }
  const rotNode=e.target.closest&&e.target.closest('[data-rotate-id]');
  if(rotNode){
   const it=state.items.find(i=>i.id===Number(rotNode.getAttribute('data-rotate-id')));if(!it)return;
   const x=g.x+it.x*g.scale,y=g.y+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale,cx=x+w/2,cy=y+h/2;
   rotateDrag={id:it.id,cx,cy,startAngle:Math.atan2(p.y-cy,p.x-cx)*180/Math.PI,startRotation:Number(it.rotation)||0};
-  svg.setPointerCapture(e.pointerId);e.preventDefault();return;
+  try{svg.setPointerCapture(e.pointerId)}catch(err){} e.preventDefault();return;
  }
  let hit=null;
- for(let i=state.items.length-1;i>=0;i--){
-  let it=state.items[i],x=g.x+it.x*g.scale,y=g.y+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale;
-  if(p.x>=x-5&&p.x<=x+w+5&&p.y>=y-5&&p.y<=y+h+5){hit=it;break}
- }
- if(hit){state.selected=hit.id;drag={id:hit.id,x:p.x,y:p.y,ix:hit.x,iy:hit.y,scale:g.scale};svg.setPointerCapture(e.pointerId);render()}
+ for(let i=state.items.length-1;i>=0;i--){let it=state.items[i],x=g.x+it.x*g.scale,y=g.y+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale;if(p.x>=x-5&&p.x<=x+w+5&&p.y>=y-5&&p.y<=y+h+5){hit=it;break}}
+ if(hit){state.selected=hit.id;drag={id:hit.id,x:p.x,y:p.y,ix:hit.x,iy:hit.y,scale:g.scale};try{svg.setPointerCapture(e.pointerId)}catch(err){}render()}
 });
 svg.addEventListener('pointermove',e=>{
- if(state.drawMode&&drawActive){const p=svgPoint(e);const last=state.drawPoints[state.drawPoints.length-1];if(!last||Math.hypot(p.x-last.x,p.y-last.y)>3)state.drawPoints.push({x:p.x,y:p.y});render();return}
- if(rotateDrag){
-  const p=svgPoint(e),angle=Math.atan2(p.y-rotateDrag.cy,p.x-rotateDrag.cx)*180/Math.PI;
-  const it=state.items.find(i=>i.id===rotateDrag.id);if(!it)return;
-  it.rotation=Math.round((rotateDrag.startRotation+angle-rotateDrag.startAngle)*1)/1;
-  render();return;
- }
- if(!drag)return;
- const p=svgPoint(e),it=state.items.find(i=>i.id===drag.id);if(!it)return;
- it.x=Math.round((drag.ix+(p.x-drag.x)/drag.scale)*2)/2;it.y=Math.round((drag.iy+(p.y-drag.y)/drag.scale)*2)/2;
- $('compX').value=it.x;$('compY').value=it.y;render();
+ if(state.drawMode){const p=svgPoint(e);state.drawCursor=p;if(state.drawType==='freehand'&&drawActive){const last=state.drawPoints[state.drawPoints.length-1];if(!last||Math.hypot(p.x-last.x,p.y-last.y)>2)state.drawPoints.push(p)}render();return}
+ if(rotateDrag){const p=svgPoint(e),angle=Math.atan2(p.y-rotateDrag.cy,p.x-rotateDrag.cx)*180/Math.PI,it=state.items.find(i=>i.id===rotateDrag.id);if(!it)return;it.rotation=rotateDrag.startRotation+angle-rotateDrag.startAngle;render();return}
+ if(!drag)return;const p=svgPoint(e),it=state.items.find(i=>i.id===drag.id);if(!it)return;it.x=drag.ix+(p.x-drag.x)/drag.scale;it.y=drag.iy+(p.y-drag.y)/drag.scale;$('compX').value=it.x;$('compY').value=it.y;render();
 });
 function endPointer(){if(state.drawMode&&drawActive){drawActive=false;render();return}drag=null;rotateDrag=null}
 svg.addEventListener('pointerup',endPointer);svg.addEventListener('pointercancel',endPointer);
-$('drawCustomBtn').onclick=startCustomDrawing;
+$('drawCustomBtn').onclick=()=>startCustomDrawing('freehand');
+$('drawStraightBtn').onclick=()=>startCustomDrawing('straight');
+$('finishDrawBtn').onclick=finishCustomDrawing;
 $('saveCustomBtn').onclick=saveSelectedCustom;
 function clampItems(){state.items.forEach(it=>{it.x=clamp(it.x,0,Math.max(0,state.w-it.w));it.y=clamp(it.y,-Math.max(0,it.h-state.h),Math.max(0,state.h-it.h))})}
 $('compX').addEventListener('change',()=>{let it=selected();if(it){it.x=Number($('compX').value)||0;render()}});$('compY').addEventListener('change',()=>{let it=selected();if(it){it.y=Number($('compY').value)||0;render()}});
@@ -322,18 +333,23 @@ function addCustomItem(index){
  const it={id:state.nextId++,type:'custom',name:src.name,w:src.w||12,h:src.h||8,x:Math.max(0,(state.w-(src.w||12))/2),y:Math.max(0,(state.h-(src.h||8))/2),color:src.color||'#8b9b72',points:JSON.parse(JSON.stringify(src.points||[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}])),rotation:0};
  state.items.push(it);state.selected=it.id;state.view='front';updateViewButtons();render();toast('เพิ่ม '+it.name+' ลงบนกระเป๋าแล้ว');
 }
-function startCustomDrawing(){
- state.drawMode=!state.drawMode;state.drawPoints=[];
- $('drawCustomBtn').classList.toggle('active',state.drawMode);
- $('drawCustomBtn').textContent=state.drawMode?'✓ วาดเสร็จ / ยกเลิกวาด':'✎ เริ่มวาดชิ้นส่วนเอง';
- $('drawHint').textContent=state.drawMode?'ลากนิ้วหรือเมาส์บนตัวกระเป๋าเพื่อวาดขอบชิ้นส่วน เมื่อเสร็จให้กดปุ่มนี้อีกครั้ง':'กดเริ่มวาด แล้วลากบนตัวกระเป๋าเพื่อวาดรูปทรงชิ้นส่วน';
+function startCustomDrawing(type='freehand'){
+ state.drawMode=true;state.drawType=type;state.drawPoints=[];state.drawCursor=null;
+ updateDrawControls();
+}
+function updateDrawControls(){
+ $('drawCustomBtn').classList.toggle('active',state.drawMode&&state.drawType==='freehand');
+ $('drawStraightBtn').classList.toggle('active',state.drawMode&&state.drawType==='straight');
+ $('drawCustomBtn').textContent=state.drawMode&&state.drawType==='freehand'?'✓ กำลังวาดเส้นอิสระ':'✎ เส้นอิสระ';
+ $('drawStraightBtn').textContent=state.drawMode&&state.drawType==='straight'?'✓ กำลังวาดเส้นตรง':'⌁ เส้นตรงเป็นจุด';
+ $('finishDrawBtn').disabled=!state.drawMode||state.drawPoints.length<3;
+ $('drawHint').textContent=state.drawMode?(state.drawType==='straight'?'แตะบนผ้าใบทีละจุดเพื่อสร้างเส้นตรง เมื่อครบ 3 จุดให้กดจบการวาด':'ลากนิ้วบนผ้าใบเพื่อวาดเส้นอิสระ แล้วกดจบการวาด'):'เลือกโหมดวาดก่อนเริ่ม';
  $('designSvg').style.cursor=state.drawMode?'crosshair':'default';
  document.body.classList.toggle('draw-mode',state.drawMode);
- if(!state.drawMode && state.drawPoints.length>=3) finishCustomDrawing();
- else if(!state.drawMode){state.drawPoints=[];render()}
+ render();
 }
 function finishCustomDrawing(){
- const pts=state.drawPoints.slice();state.drawPoints=[];
+ const pts=state.drawPoints.slice();state.drawPoints=[];state.drawCursor=null;state.drawMode=false;updateDrawControls();
  if(pts.length<3){render();toast('วาดอย่างน้อย 3 จุดเพื่อสร้างชิ้นส่วน');return}
  const g=getBagGeom(),minX=Math.min(...pts.map(p=>p.x)),maxX=Math.max(...pts.map(p=>p.x)),minY=Math.min(...pts.map(p=>p.y)),maxY=Math.max(...pts.map(p=>p.y));
  const w=Math.max(1,(maxX-minX)/g.scale),h=Math.max(1,(maxY-minY)/g.scale);
