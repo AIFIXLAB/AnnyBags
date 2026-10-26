@@ -115,11 +115,16 @@ body.draw-mode #designSvg{touch-action:pan-y;-webkit-tap-highlight-color:transpa
     <strong id="uploadTitle">เลือกรูปผ้า หรือถ่ายรูป</strong>
     <small id="uploadHint">แตะที่นี่เพื่อเปิดรูปภาพจากอุปกรณ์</small>
    </label>
-   <input type="file" id="fabricFile" accept="image/*" class="file-input" aria-label="เลือกรูปผ้า">
+   <input type="file" id="fabricFile" accept="image/*" capture="environment" class="file-input" aria-label="เลือกรูปผ้า">
    <canvas id="photoCanvas" title="แตะบริเวณสีผ้าที่ต้องการเลือก"></canvas>
    <p id="photoStatus" class="hint">เมื่อรูปแสดงแล้ว ให้แตะบริเวณสีผ้าบนรูปเพื่อเก็บสีตัวอย่าง แล้วกด “ใช้สีผ้าที่เลือก”</p>
    <p class="hint">รองรับ JPG, PNG, WEBP และรูปภาพจากกล้อง</p>
    <button id="applyFabric" style="width:100%;margin-top:7px">ใช้สีผ้าที่เลือก</button>
+   <button id="applyFabricPattern" style="width:100%;margin-top:7px">▧ ใช้ลายผ้าจากภาพกับชิ้นส่วน</button>
+   <label class="field" style="margin-top:7px">ขนาดลายผ้า <span id="patternScaleLabel">100%</span>
+    <input id="patternScale" type="range" min="25" max="200" step="5" value="100">
+   </label>
+   <p class="hint">เลือกรูปผ้า แล้วกด “ใช้ลายผ้าจากภาพกับชิ้นส่วน” เพื่อใส่ลายจริง หากไม่ได้เลือกชิ้นส่วนจะใช้กับตัวกระเป๋า</p>
    <div class="divider"></div>
    <div class="section-label">ชิ้นส่วนที่เลือก</div>
    <div id="selectionInfo" class="empty">ยังไม่ได้เลือกชิ้นส่วน แตะชิ้นส่วนในพื้นที่ออกแบบเพื่อแก้ไข</div>
@@ -150,7 +155,7 @@ body.draw-mode #designSvg{touch-action:pan-y;-webkit-tap-highlight-color:transpa
 <div id="toast" class="toast"></div>
 <script>
 const $=id=>document.getElementById(id);
-const state={shape:'tote',w:30,h:25,d:10,seam:1,bodyColor:'#d8c5a7',view:'front',items:[],selected:null,nextId:1,photoColor:null,photoData:null,savedColors:[],drawMode:false,drawType:'freehand',drawPoints:[],drawCursor:null,customLibrary:[]};
+const state={shape:'tote',w:30,h:25,d:10,seam:1,bodyColor:'#d8c5a7',view:'front',items:[],selected:null,nextId:1,photoColor:null,photoData:null,textureScale:100,bodyTexture:null,savedColors:[],drawMode:false,drawType:'freehand',drawPoints:[],drawCursor:null,customLibrary:[]};
 const names={pocket:'กระเป๋าปะสี่เหลี่ยม',zipper:'ช่องซิปแนวนอน',roundPocket:'ช่องกระเป๋าทรงโค้ง',divider:'ช่องแบ่งด้านใน',strap:'สายกระเป๋า',band:'แถบตกแต่ง'};
 const defaults={pocket:{w:15,h:12,x:7.5,y:8,color:'#b98f65'},zipper:{w:18,h:3,x:6,y:5,color:'#8b9b72'},roundPocket:{w:15,h:10,x:7.5,y:9,color:'#8b9b72'},divider:{w:22,h:13,x:4,y:8,color:'#e4c4c7'},strap:{w:3,h:22,x:4,y:-19,color:'#8b6849'},band:{w:24,h:3,x:3,y:18,color:'#b96e58'}};
 const cmToPx=()=>Math.min(11,340/Math.max(state.w,state.h+5));
@@ -158,6 +163,15 @@ function toast(s){$('toast').textContent=s;$('toast').style.display='block';clea
 function shapePath(x,y,w,h,shape){if(shape==='shoulder')return `M ${x+3} ${y} Q ${x+w/2} ${y-5} ${x+w-3} ${y} L ${x+w} ${y+h-8} Q ${x+w/2} ${y+h+7} ${x} ${y+h-8} Z`;if(shape==='drawstring')return `M ${x+4} ${y+10} Q ${x} ${y+3} ${x+5} ${y} L ${x+w-5} ${y} Q ${x+w} ${y+3} ${x+w-4} ${y+10} L ${x+w-1} ${y+h-4} Q ${x+w/2} ${y+h+2} ${x+1} ${y+h-4} Z`;return `M ${x} ${y} L ${x+w} ${y} L ${x+w} ${y+h} Q ${x+w/2} ${y+h+3} ${x} ${y+h} Z`}
 function getBagGeom(){let scale=cmToPx(),w=state.w*scale,h=state.h*scale,x=(500-w)/2,y=(520-h)/2+5;if(state.view==='back'){}return {scale,w,h,x,y}}
 function render(){const svg=$('designSvg'),g=getBagGeom();svg.innerHTML='';let ns='http://www.w3.org/2000/svg';let target=svg;function el(tag,attrs,parent=target){let e=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));parent.appendChild(e);return e}
+function makeTexturePattern(data,id){
+ if(!data)return null;
+ let defs=svg.querySelector('defs');if(!defs){defs=document.createElementNS(ns,'defs');svg.insertBefore(defs,svg.firstChild)}
+ let old=defs.querySelector('#'+id);if(old)old.remove();
+ const factor=(Number(state.textureScale)||100)/100;
+ const pw=100*factor,ratio=Number(state.textureRatio)||1,ph=pw/Math.max(.2,Math.min(5,ratio));
+ let pat=document.createElementNS(ns,'pattern');pat.setAttribute('id',id);pat.setAttribute('patternUnits','userSpaceOnUse');pat.setAttribute('width',pw);pat.setAttribute('height',ph);
+ let im=document.createElementNS(ns,'image');im.setAttribute('href',data);im.setAttribute('x','0');im.setAttribute('y','0');im.setAttribute('width',pw);im.setAttribute('height',ph);im.setAttribute('preserveAspectRatio','none');pat.appendChild(im);defs.appendChild(pat);return 'url(#'+id+')';
+}
 el('rect',{x:0,y:0,width:500,height:520,fill:'transparent'});
 // shadow and bag
 el('ellipse',{cx:g.x+g.w/2,cy:g.y+g.h+18,rx:g.w*.55,ry:12,fill:'#000',opacity:.08});
@@ -166,11 +180,11 @@ if(state.view==='mock3d'){
  el('path',{d:`M ${g.x} ${g.y+g.h} L ${g.x+g.w} ${g.y+g.h} L ${g.x+g.w+depth} ${g.y+g.h+depth*.4} L ${g.x+depth} ${g.y+g.h+depth*.4} Z`,fill:shade(state.bodyColor,-10),stroke:'#554c40','stroke-width':1.2});
 }
 let by=g.y,bx=g.x;
-el('path',{d:shapePath(bx,by,g.w,g.h,state.shape),fill:state.bodyColor,stroke:'#635849','stroke-width':1.5});
+el('path',{d:shapePath(bx,by,g.w,g.h,state.shape),fill:state.bodyTexture?makeTexturePattern(state.bodyTexture,'bodyFabricPattern'):state.bodyColor,stroke:'#635849','stroke-width':1.5});
 el('path',{d:`M ${bx+7} ${by+7} L ${bx+g.w-7} ${by+7} L ${bx+g.w-7} ${by+g.h-7} Q ${bx+g.w/2} ${by+g.h-1} ${bx+7} ${by+g.h-7} Z`,fill:'none',stroke:'#ffffffaa','stroke-width':1,'stroke-dasharray':'4 4'});
 if(state.shape!=='drawstring'){let loopW=g.w*.18,loopY=by-5;el('path',{d:`M ${bx+g.w*.22} ${by+4} C ${bx+g.w*.22} ${loopY-35},${bx+g.w*.36} ${loopY-35},${bx+g.w*.36} ${by+4}`,fill:'none',stroke:'#7c5c3d','stroke-width':Math.max(3,g.scale*.65),'stroke-linecap':'round'});el('path',{d:`M ${bx+g.w*.64} ${by+4} C ${bx+g.w*.64} ${loopY-35},${bx+g.w*.78} ${loopY-35},${bx+g.w*.78} ${by+4}`,fill:'none',stroke:'#7c5c3d','stroke-width':Math.max(3,g.scale*.65),'stroke-linecap':'round'});}
 if(state.view==='back'){el('text',{x:250,y:30,'text-anchor':'middle','font-size':12,fill:'#777'}).textContent='ด้านหลัง — ชิ้นส่วนด้านหน้าไม่แสดง';}
-state.items.forEach(it=>{if(state.view==='back'&&!it.back) return;let x=bx+it.x*g.scale,y=by+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale;let attrs={fill:it.color,stroke:it.id===state.selected?'#292720':'#756650','stroke-width':it.id===state.selected?2.5:1.2};let group=el('g',{transform:`rotate(${Number(it.rotation)||0} ${x+w/2} ${y+h/2})`});let parent=target;target=group;if(it.type==='custom'&&Array.isArray(it.points)&&it.points.length>2){let points=it.points.map(p=>`${x+p.x*w} ${y+p.y*h}`).join(' ');el('polygon',{points,...attrs});}
+state.items.forEach(it=>{if(state.view==='back'&&!it.back) return;let x=bx+it.x*g.scale,y=by+it.y*g.scale,w=it.w*g.scale,h=it.h*g.scale;let attrs={fill:it.texture?makeTexturePattern(it.texture,'fabricPattern'+it.id):it.color,stroke:it.id===state.selected?'#292720':'#756650','stroke-width':it.id===state.selected?2.5:1.2};let group=el('g',{transform:`rotate(${Number(it.rotation)||0} ${x+w/2} ${y+h/2})`});let parent=target;target=group;if(it.type==='custom'&&Array.isArray(it.points)&&it.points.length>2){let points=it.points.map(p=>`${x+p.x*w} ${y+p.y*h}`).join(' ');el('polygon',{points,...attrs});}
 else if(it.type==='zipper'){el('rect',{x,y:y+h*.25,width:w,height:h*.5,rx:2,...attrs});el('line',{x1:x+3,y1:y+h/2,x2:x+w-3,y2:y+h/2,stroke:'#e8e2d6','stroke-width':1.5,'stroke-dasharray':'2 2'});el('rect',{x:x+w*.8,y:y+h*.35,width:w*.06,height:h*.3,fill:'#d9d5cc',stroke:'#5d5b56','stroke-width':.7});}
 else if(it.type==='roundPocket'){el('path',{d:`M ${x} ${y+5} Q ${x} ${y} ${x+5} ${y} L ${x+w-5} ${y} Q ${x+w} ${y} ${x+w} ${y+5} L ${x+w} ${y+h-8} Q ${x+w/2} ${y+h+8} ${x} ${y+h-8} Z`,...attrs});}
 else if(it.type==='strap'){el('rect',{x,y,width:w,height:h,rx:w/2,...attrs});}
@@ -238,9 +252,9 @@ function setupPhoto(fileOverride){
     const c=$('photoCanvas'),maxW=900,scale=Math.min(1,maxW/img.width);
     c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));
     const ctx=c.getContext('2d',{willReadFrequently:true});ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);
-    c.style.display='block';state.photoData=c.toDataURL('image/jpeg',.85);state.photoColor=null;
+    c.style.display='block';state.photoData=c.toDataURL('image/jpeg',.9);state.textureRatio=c.width/c.height;state.photoColor=null;
     $('uploadTitle').textContent='เปลี่ยนรูปผ้า';$('uploadHint').textContent=file.name||'เลือกรูปสำเร็จ';
-    $('photoStatus').textContent='รูปพร้อมแล้ว — แตะจุดสีผ้าที่ต้องการบนรูป จากนั้นกด “ใช้สีผ้าที่เลือก”';
+    $('photoStatus').textContent='รูปพร้อมแล้ว — กด “ใช้ลายผ้าจากภาพกับชิ้นส่วน” เพื่อนำลายไปใส่กระเป๋า หรือแตะรูปเพื่อเลือกสี';
     toast('เปิดรูปผ้าสำเร็จ แตะบนรูปเพื่อเลือกสี');
    }catch(err){$('photoStatus').textContent='ไม่สามารถอ่านรูปนี้ได้ กรุณาเลือกรูปอื่น';toast('เกิดข้อผิดพลาดกับไฟล์รูป')}
   };
@@ -264,6 +278,14 @@ $('uploadZone').addEventListener('dragover',e=>{e.preventDefault();$('uploadZone
 $('uploadZone').addEventListener('dragleave',()=> $('uploadZone').classList.remove('dragover'));
 $('uploadZone').addEventListener('drop',e=>{e.preventDefault();$('uploadZone').classList.remove('dragover');const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)setupPhoto(f)});
 $('applyFabric').onclick=()=>{if(!state.photoColor){toast('กรุณาเลือกรูปผ้าแล้วแตะเลือกสีบนภาพก่อน');return}applyColor(state.photoColor);toast('นำสีไปใช้แล้ว')};
+$('patternScale').addEventListener('input',e=>{state.textureScale=Number(e.target.value)||100;$('patternScaleLabel').textContent=state.textureScale+'%';render()});
+$('applyFabricPattern').onclick=()=>{
+ if(!state.photoData){toast('กรุณาถ่ายรูปหรือเลือกไฟล์ภาพลายผ้าก่อน');return}
+ if(state.selected){const it=selected();if(!it){toast('เลือกชิ้นส่วนบนกระเป๋าก่อน');return}it.texture=state.photoData;}
+ else{state.bodyTexture=state.photoData;}
+ render();toast(state.selected?'นำลายผ้าไปใช้กับชิ้นส่วนที่เลือกแล้ว':'นำลายผ้าไปใช้กับตัวกระเป๋าแล้ว');
+};
+
 $('bodySwatches').addEventListener('click',e=>{let b=e.target.closest('[data-color]');if(!b)return;state.bodyColor=b.dataset.color;$('bodyColor').value=state.bodyColor;document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('chosen'));b.classList.add('chosen');render()});
 $('bodyColor').addEventListener('input',e=>{state.bodyColor=e.target.value;render()});
 $('applyBag').onclick=applyBag;['bagW','bagH','bagD','seam'].forEach(id=>$(id).addEventListener('change',applyBag));
